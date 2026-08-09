@@ -1,0 +1,280 @@
+@import "tailwindcss";
+
+:root {
+  --ink: #1d2523;
+  --muted: #66706d;
+  --line: #dfe5e2;
+  --soft: #f4f7f5;
+  --paper: #fcfdfc;
+  --sidebar: #f0f4f1;
+  --accent: #176b52;
+  --accent-soft: #dff1e9;
+  --danger: #a33a32;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; min-height: 100%; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Inter, Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+button, textarea, input { font: inherit; }
+button { color: inherit; }
+
+.app-shell { display: flex; min-height: 100vh; background: var(--paper); }
+
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 30;
+  display: flex;
+  width: 286px;
+  flex-direction: column;
+  padding: 24px 18px 18px;
+  border-right: 1px solid var(--line);
+  background: var(--sidebar);
+}
+
+.brand-row { display: flex; align-items: center; gap: 11px; padding: 0 7px 25px; }
+.brand-row > div:nth-child(2) { display: grid; gap: 2px; }
+.brand-row strong { font-size: 15px; letter-spacing: .08em; }
+.brand-row span { color: var(--muted); font-size: 11px; }
+.brand-mark, .hero-mark, .avatar {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--ink);
+  color: white;
+  font-weight: 750;
+}
+.brand-mark { width: 34px; height: 34px; font-size: 15px; }
+
+.new-chat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #cbd6d1;
+  border-radius: 12px;
+  background: rgba(255,255,255,.72);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 650;
+  transition: border-color .15s, background .15s;
+}
+.new-chat:hover { border-color: #94aaa1; background: white; }
+.new-chat span { font-size: 20px; line-height: 1; }
+
+.session-list { flex: 1; min-height: 0; margin-top: 27px; overflow-y: auto; }
+.section-label { margin: 0 10px 8px; color: #8a9491; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.session-row { display: flex; align-items: center; border-radius: 10px; }
+.session-row.active { background: #e1e9e5; }
+.session-row > button:first-child { display: flex; min-width: 0; flex: 1; align-items: center; gap: 9px; padding: 10px; border: 0; background: transparent; cursor: pointer; text-align: left; }
+.session-row > button:first-child span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.session-icon { color: #82918b; }
+.delete-chat { opacity: 0; margin-right: 7px; border: 0; background: transparent; color: #75817d; cursor: pointer; }
+.session-row:hover .delete-chat, .delete-chat:focus-visible { opacity: 1; }
+
+.chat-panel { display: flex; min-width: 0; min-height: 100vh; flex: 1; flex-direction: column; margin-left: 286px; }
+.chat-header { position: sticky; top: 0; z-index: 20; display: flex; height: 68px; align-items: center; justify-content: space-between; padding: 0 30px; border-bottom: 1px solid rgba(223,229,226,.8); background: rgba(252,253,252,.9); backdrop-filter: blur(12px); }
+.chat-header > div:first-child { display: grid; gap: 3px; }
+.chat-header strong { font-size: 14px; }
+.chat-header > div:first-child span { color: var(--muted); font-size: 11px; }
+.connection-pill { display: flex; align-items: center; gap: 7px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: 11px; }
+.connection-pill > span { width: 6px; height: 6px; border-radius: 999px; background: #a9b2af; }
+.connection-pill.ready > span { background: #258b67; }
+.connection-pill.offline { color: #8b514c; border-color: #ead3d0; background: #fff8f7; }
+.connection-pill.offline > span { background: #bb594f; }
+
+.image-dock { position: fixed; z-index: 19; top: 80px; right: 24px; display: flex; align-items: flex-end; flex-direction: column; }
+.image-tab { display: flex; height: 40px; align-items: center; gap: 8px; padding: 5px 10px 5px 6px; border: 1px solid #cbded6; border-radius: 11px; background: rgba(243,250,247,.96); color: #315f50; box-shadow: 0 6px 22px rgba(35,54,47,.09); cursor: pointer; font-size: 11px; font-weight: 700; backdrop-filter: blur(10px); }
+.image-tab.open { border-bottom-right-radius: 6px; border-bottom-left-radius: 6px; }
+.image-tab-thumb { position: relative; display: grid; width: 28px; height: 28px; overflow: hidden; place-items: center; border-radius: 7px; background: var(--accent-soft); color: var(--accent); }
+.image-tab-thumb > img { position: relative; z-index: 1; display: block; width: 100%; height: 100%; object-fit: cover; }
+.image-tab-thumb > span { position: absolute; }
+.image-panel { width: min(360px, calc(100vw - 48px)); margin-top: 7px; padding: 9px; border: 1px solid #cbded6; border-radius: 14px; background: rgba(252,253,252,.98); box-shadow: 0 18px 50px rgba(25,42,36,.16); backdrop-filter: blur(14px); }
+.image-panel-frame { position: relative; display: grid; min-height: 150px; overflow: hidden; place-items: center; border-radius: 10px; background: var(--soft); }
+.image-panel-frame > img { position: relative; z-index: 1; display: block; width: 100%; max-height: min(42vh, 360px); object-fit: contain; color: transparent; font-size: 0; }
+.image-preview-fallback { display: none; min-height: 150px; place-items: center; align-content: center; gap: 8px; color: var(--muted); font-size: 11px; }
+.image-preview-fallback > span { color: var(--accent); font-size: 24px; }
+.image-panel-frame > img[hidden] + .image-preview-fallback { display: grid; }
+.image-panel-meta { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 3px 2px; }
+.image-panel-meta > div { display: grid; min-width: 0; gap: 3px; }
+.image-panel-meta strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.image-panel-meta span { color: var(--muted); font-size: 9px; }
+.image-panel-meta button { flex: 0 0 auto; border: 0; background: transparent; color: var(--accent); cursor: pointer; font-size: 10px; font-weight: 700; }
+.image-panel.muted { border-style: dashed; opacity: .72; }
+.image-panel.muted .image-panel-frame > img { filter: grayscale(1); }
+
+.messages { display: flex; flex: 1; justify-content: center; min-height: 0; padding: 30px 24px 220px; }
+.empty-state { align-self: center; width: min(650px, 100%); padding-bottom: 6vh; text-align: center; }
+.hero-mark { width: 54px; height: 54px; margin: 0 auto 18px; border-radius: 16px; font-size: 21px; box-shadow: 0 10px 28px rgba(29,37,35,.16); }
+/*
+ * `.empty-state > p`와 특이도를 맞춰 !important 없이 정상적으로 이긴다. 예전에는 !important로
+ * margin을 덮어써서 아래 규칙의 `auto` 센터링만 죽고 max-width: 530px은 그대로 남았고,
+ * 그 결과 530px 블록이 650px 컨테이너 왼쪽에 붙어 (650-530)/2 = 60px만큼 치우쳐 보였다.
+ * 한 줄 트래킹 라벨이 530px 제한을 받을 이유가 없으므로 max-width도 명시적으로 푼다.
+ */
+.empty-state > p.eyebrow {
+  max-width: none;
+  margin: 0 auto 12px;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: .16em;
+}
+.empty-state h1 { margin: 0; font-size: clamp(28px, 4vw, 42px); font-weight: 650; letter-spacing: -.035em; }
+.empty-state > p { max-width: 530px; margin: 15px auto 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
+.suggestions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: 30px; }
+.suggestions button { display: flex; min-height: 82px; align-items: flex-start; justify-content: space-between; padding: 14px; border: 1px solid var(--line); border-radius: 13px; background: white; cursor: pointer; text-align: left; font-size: 12px; line-height: 1.5; transition: transform .15s, border-color .15s, box-shadow .15s; }
+.suggestions button:hover { transform: translateY(-2px); border-color: #a9bbb4; box-shadow: 0 8px 22px rgba(45,65,58,.07); }
+.suggestions span { color: var(--accent); }
+
+.message-column { width: min(780px, 100%); }
+.message { display: grid; grid-template-columns: 36px 1fr; gap: 14px; margin: 0 0 30px; }
+.message.user { margin-left: 72px; }
+.avatar { width: 34px; height: 34px; border-radius: 9px; font-size: 12px; }
+.message.user .avatar { background: #e5ebe8; color: #3d4945; }
+.message-body { min-width: 0; padding-top: 2px; }
+.message-body > strong { display: block; margin-bottom: 7px; font-size: 12px; }
+/*
+ * 자식 선택자로 좁힌다. 이 pre-wrap은 마크다운을 쓰지 않는 사용자 메시지의 줄바꿈을
+ * 살리기 위한 것인데, 후손 선택자로 두면 마크다운이 만든 `<p>`까지 물들어 소스의
+ * 들여쓰기와 줄바꿈이 화면에 그대로 노출된다.
+ */
+.message-body > p { margin: 0; white-space: pre-wrap; font-size: 14px; line-height: 1.75; }
+.inline-image-chip { display: inline-flex; margin: 0 0 8px; padding: 5px 9px; border-radius: 7px; background: var(--accent-soft); color: #315f50; font-size: 11px; }
+.thinking { display: flex; gap: 4px; padding-top: 8px; }
+.thinking i { width: 5px; height: 5px; border-radius: 999px; background: #82918b; animation: pulse 1.15s infinite ease-in-out; }
+.thinking i:nth-child(2) { animation-delay: .15s; }
+.thinking i:nth-child(3) { animation-delay: .3s; }
+@keyframes pulse { 0%, 70%, 100% { opacity: .28; transform: translateY(0); } 35% { opacity: 1; transform: translateY(-3px); } }
+.pending-row { display: flex; align-items: center; gap: 11px; min-height: 22px; padding-top: 6px; }
+.pending-row .thinking { padding-top: 0; }
+.progress-label { color: var(--muted); font-size: 12px; letter-spacing: -.01em; animation: label-in .3s ease both; }
+@keyframes label-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+.loading-state { align-self: center; color: var(--muted); font-size: 13px; }
+
+/* ---------- 마크다운 답변 ---------- */
+/*
+ * Tailwind preflight가 제목/문단/리스트의 여백과 불릿을 전부 지우기 때문에, 마크다운이
+ * 만들어 내는 태그는 여기서 다시 세워 줘야 한다. 모두 .markdown 아래로 스코프해서
+ * 시트의 다른 영역(사이드바, 컴포저)에는 새지 않게 한다.
+ */
+.markdown { font-size: 14px; line-height: 1.75; }
+/* 버블 자체가 이미 여백을 가지므로 첫/마지막 블록의 바깥 여백은 접는다. */
+.markdown > :first-child { margin-top: 0; }
+.markdown > :last-child { margin-bottom: 0; }
+
+.markdown h1, .markdown h2, .markdown h3, .markdown h4 { margin: 22px 0 9px; font-weight: 680; line-height: 1.35; letter-spacing: -.015em; }
+.markdown h1 { font-size: 21px; }
+.markdown h2 { font-size: 18px; }
+.markdown h3 { font-size: 16px; }
+.markdown h4 { font-size: 14px; }
+.markdown p { margin: 0 0 12px; }
+
+.markdown ul, .markdown ol { margin: 0 0 12px; padding-left: 22px; }
+.markdown ul { list-style: disc; }
+.markdown ol { list-style: decimal; }
+.markdown li { margin: 4px 0; }
+.markdown li::marker { color: var(--muted); }
+/* 중첩 리스트는 바깥 문단 여백을 물려받으면 단이 뜨므로 위쪽만 살짝 띄우고 불릿만 바꾼다. */
+.markdown li > ul, .markdown li > ol { margin: 4px 0 0; }
+.markdown li ul { list-style: circle; }
+/* loose list에서 li 안에 생기는 p는 문단 여백을 빼야 줄 간격이 두 번 벌어지지 않는다. */
+.markdown li > p { margin: 0; }
+
+.markdown code { padding: 2px 5px; border: 1px solid var(--line); border-radius: 5px; background: var(--soft); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .875em; }
+.markdown pre { margin: 0 0 12px; padding: 12px 13px; overflow-x: auto; border: 1px solid var(--line); border-radius: 11px; background: var(--soft); }
+/* pre 안의 code가 인라인 장식을 물려받으면 테두리가 이중으로 겹친다. */
+.markdown pre code { padding: 0; border: 0; border-radius: 0; background: transparent; font-size: 12.5px; line-height: 1.65; white-space: pre; }
+
+.markdown blockquote { margin: 0 0 12px; padding: 2px 0 2px 13px; border-left: 3px solid var(--accent-soft); color: var(--muted); }
+.markdown hr { margin: 18px 0; border: 0; border-top: 1px solid var(--line); }
+.markdown strong { font-weight: 680; }
+.markdown em { font-style: italic; }
+.markdown a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.markdown a:hover { text-decoration-thickness: 2px; }
+
+/*
+ * 표는 래퍼가 가로 스크롤을 흡수한다. 표에 직접 overflow를 걸 수 없어서(테이블은
+ * overflow가 먹지 않는다) Markdown 컴포넌트가 table을 이 div로 감싼다.
+ * width: max-content + min-width: 100% 조합이면 좁을 때는 폭을 꽉 채우고,
+ * 내용이 넘칠 때는 표가 자기 자연 폭을 갖고 래퍼만 스크롤한다.
+ */
+.markdown-table-scroll { margin: 0 0 12px; overflow-x: auto; border: 1px solid var(--line); border-radius: 11px; }
+.markdown-table-scroll table { width: max-content; min-width: 100%; border-collapse: collapse; font-size: 13px; }
+.markdown-table-scroll th, .markdown-table-scroll td { padding: 8px 12px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+/* 바깥 테두리는 래퍼가 그리므로 마지막 열/행의 선은 지운다. */
+.markdown-table-scroll th:last-child, .markdown-table-scroll td:last-child { border-right: 0; }
+.markdown-table-scroll tbody tr:last-child td { border-bottom: 0; }
+.markdown-table-scroll thead th { background: var(--soft); font-weight: 680; white-space: nowrap; }
+.markdown-table-scroll tbody tr:nth-child(even) { background: rgba(244, 247, 245, .55); }
+
+/* 아직 자라는 중임을 알리는 커서. 마지막 블록 뒤에만 붙여 답변이 끊긴 것처럼 보이지 않게 한다. */
+.message.streaming .markdown > :last-child::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 3px;
+  transform: translateY(2px);
+  background: var(--accent);
+  animation: caret 1.05s steps(2, start) infinite;
+}
+@keyframes caret { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+.composer-wrap { position: fixed; z-index: 15; right: 0; bottom: 0; left: 286px; padding: 20px 24px 14px; background: linear-gradient(to bottom, rgba(252,253,252,0), var(--paper) 27%); }
+.composer, .attachment-warning, .error-banner, .local-note { width: min(780px, 100%); margin-right: auto; margin-left: auto; }
+.composer { position: relative; min-height: 106px; padding: 16px 15px 12px; border: 1px solid #cad5d0; border-radius: 18px; background: white; box-shadow: 0 12px 40px rgba(35,54,47,.1); transition: border-color .15s, box-shadow .15s; }
+.composer:focus-within { border-color: #7ea394; box-shadow: 0 13px 42px rgba(35,54,47,.13); }
+.composer textarea { width: 100%; max-height: 150px; min-height: 36px; resize: none; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 14px; line-height: 1.55; }
+.composer textarea::placeholder { color: #9aa39f; }
+.composer-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.composer-actions > div { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; }
+.icon-button, .send-button { display: grid; place-items: center; border: 0; border-radius: 10px; cursor: pointer; }
+.icon-button { width: 30px; height: 30px; background: var(--soft); font-size: 20px; }
+.icon-button:hover { background: #e6ece9; }
+.send-button { width: 34px; height: 34px; background: var(--ink); color: white; font-size: 19px; }
+.send-button:disabled { cursor: not-allowed; opacity: .28; }
+.local-note { margin-top: 9px; color: #8a9491; text-align: center; font-size: 10px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+
+.attachment-warning { margin-bottom: 8px; padding: 0 4px; color: #84645e; font-size: 10px; }
+.error-banner { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 9px 11px; border: 1px solid #edd1ce; border-radius: 10px; background: #fff8f7; color: var(--danger); font-size: 11px; }
+.error-banner span { display: grid; width: 17px; height: 17px; place-items: center; border-radius: 999px; background: #f3d8d5; font-weight: 800; }
+
+.mobile-menu, .close-sidebar, .sidebar-scrim { display: none; }
+
+@media (max-width: 780px) {
+  .sidebar { transform: translateX(-100%); transition: transform .2s ease; box-shadow: 12px 0 40px rgba(29,37,35,.12); }
+  .sidebar-open { transform: translateX(0); }
+  .sidebar-scrim { position: fixed; inset: 0; z-index: 25; display: block; border: 0; background: rgba(20,28,25,.25); }
+  .close-sidebar { display: block; margin-left: auto; border: 0; background: transparent; color: var(--muted); font-size: 22px; }
+  .mobile-menu { position: fixed; z-index: 22; top: 17px; left: 14px; display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid var(--line); border-radius: 9px; background: rgba(255,255,255,.92); cursor: pointer; }
+  .chat-panel { margin-left: 0; }
+  .chat-header { padding: 0 14px 0 62px; }
+  .connection-pill { max-width: 145px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .image-dock { top: 78px; right: 12px; }
+  .image-panel { width: min(340px, calc(100vw - 24px)); }
+  .composer-wrap { left: 0; padding-right: 12px; padding-left: 12px; }
+  .suggestions { grid-template-columns: 1fr; }
+  .suggestions button { min-height: 56px; }
+  .message.user { margin-left: 24px; }
+  .messages { padding-right: 16px; padding-left: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  /*
+   * 위 규칙은 duration만 .01ms로 줄이는데, 무한 반복 깜빡임에 그걸 적용하면 오히려
+   * 초당 수만 번 점멸하는 스트로브가 된다. 커서는 아예 멈춘 상태로 켜 둔다.
+   */
+  .message.streaming .markdown > :last-child::after { animation: none !important; opacity: 1; }
+}

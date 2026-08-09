@@ -1,0 +1,1158 @@
+<!doctype html>
+<html lang="ko" data-theme="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KAVA 발표</title>
+<style>
+/* ── 색 ─────────────────────────────────────────────────────────
+   순백에 순검정을 올리면 대비가 21:1이라 5분을 보면 눈이 아프다.
+   배경을 옅은 회색, 글자를 짙은 잉크색으로 내려 12:1 근처로 맞춘다.
+   색은 잉크, 회색, 낮은 채도의 파랑 세 가지만 쓴다.            */
+:root{
+  --bg:#f2f3f4;
+  --ink:#22262b;
+  --ink-2:#5b626a;
+  --ink-3:#8b929a;
+  --rule:#d5d9dd;
+  --rule-2:#b9bfc5;
+  --accent:#2f5d8a;
+  --accent-soft:#e3eaf2;
+  --weak:#9b5050;
+  --before:#a9afb5;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#15181b; --ink:#dee2e6; --ink-2:#99a1a9; --ink-3:#6d757d;
+    --rule:#2b3137; --rule-2:#3d444b;
+    --accent:#7fa8d1; --accent-soft:#1c2833; --weak:#cc8b8b; --before:#565d64;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#f2f3f4; --ink:#22262b; --ink-2:#5b626a; --ink-3:#8b929a;
+  --rule:#d5d9dd; --rule-2:#b9bfc5;
+  --accent:#2f5d8a; --accent-soft:#e3eaf2; --weak:#9b5050; --before:#a9afb5;
+}
+:root[data-theme="dark"]{
+  --bg:#15181b; --ink:#dee2e6; --ink-2:#99a1a9; --ink-3:#6d757d;
+  --rule:#2b3137; --rule-2:#3d444b;
+  --accent:#7fa8d1; --accent-soft:#1c2833; --weak:#cc8b8b; --before:#565d64;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg)}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Pretendard Variable",Pretendard,
+    "Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+  color:var(--ink);
+  font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+}
+body.hide-cursor{cursor:none}
+
+/* 뷰포트보다 큰 고정 캔버스를 절대 배치 + translate로 가운데 둔다.
+   grid로 가운데 두면 브라우저가 안전 정렬로 clamp해서 오른쪽이 잘린다. */
+#viewport{position:fixed;inset:0;overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform-origin:center center}
+
+.slide{
+  position:absolute;inset:0;background:var(--bg);
+  padding:64px 92px 88px;
+  opacity:0;pointer-events:none;
+  transition:opacity .18s linear;   /* 움직임 없이 투명도만. 시선이 따라가지 않게 */
+}
+.slide.active{opacity:1;pointer-events:auto}
+
+/* ── 글자 ──────────────────────────────────────────────────── */
+h1{font-size:46px;font-weight:650;line-height:1.16;letter-spacing:-.015em}
+.no{font-size:19px;color:var(--ink-3);font-weight:600;margin-bottom:13px;letter-spacing:.02em}
+.no b{color:var(--accent);font-weight:650}
+.head{border-bottom:1px solid var(--rule);padding-bottom:20px;margin-bottom:32px}
+.sub{font-size:24px;font-weight:400;color:var(--ink-2);line-height:1.4;margin-top:11px}
+h3{font-size:22px;font-weight:650;color:var(--ink-2);margin-bottom:14px}
+h3.acc{color:var(--accent)}
+b,strong{font-weight:650}
+.mark{color:var(--accent);font-weight:650}
+.bad{color:var(--weak);font-weight:650}
+.small{font-size:20px;line-height:1.5;color:var(--ink-2)}
+.tiny{font-size:17px;line-height:1.45;color:var(--ink-3)}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em;white-space:nowrap;
+  background:color-mix(in srgb,var(--ink) 7%,transparent);padding:1px 6px;border-radius:3px}
+
+/* ── 배치 ──────────────────────────────────────────────────── */
+.cols{display:grid;gap:48px}
+.c2{grid-template-columns:1fr 1fr}
+.c2u{grid-template-columns:1.2fr 1fr}
+.c3{grid-template-columns:repeat(3,1fr)}
+.vrule{border-left:1px solid var(--rule);padding-left:48px}
+.stack{display:flex;flex-direction:column;gap:22px}
+.rule{height:1px;background:var(--rule);margin:6px 0}
+
+/* 개괄식 목록. 문장이 아니라 항목으로 읽히게 짧게 끊는다 */
+ul{list-style:none}
+li{font-size:22px;line-height:1.45;padding-left:19px;position:relative;margin-bottom:11px}
+li:before{content:"";position:absolute;left:0;top:.66em;width:9px;height:1px;background:var(--rule-2)}
+li .t{color:var(--ink-3);font-size:18px;display:block;margin-top:3px;line-height:1.4}
+ul.tight li{margin-bottom:8px;font-size:20px}
+
+/* 수치 타일 */
+.tiles{display:grid;grid-template-columns:repeat(5,1fr)}
+.tile{padding:0 24px;border-left:1px solid var(--rule)}
+.tile:first-child{padding-left:0;border-left:none}
+.stat{font-size:52px;font-weight:650;line-height:1.05;letter-spacing:-.02em;color:var(--accent)}
+.stat .u{font-size:27px;font-weight:600}
+.stat .was{font-size:25px;color:var(--ink-3);font-weight:600;display:block;
+  text-decoration:line-through;text-decoration-color:var(--rule-2)}
+.tile .lb{font-size:18px;color:var(--ink-2);margin-top:10px;line-height:1.4}
+
+.big{font-size:84px;font-weight:650;line-height:1;letter-spacing:-.025em}
+.big.acc{color:var(--accent)}
+.big.neg{color:var(--weak)}
+.big-cap{font-size:19px;color:var(--ink-2);margin-top:12px;line-height:1.4}
+.mid{font-size:44px;font-weight:650;line-height:1.1;letter-spacing:-.02em}
+.mid .was{color:var(--ink-3)}
+.mid .now{color:var(--accent)}
+
+/* 표: 카드나 줄무늬 없이 괘선만 */
+table{border-collapse:collapse;width:100%;font-size:21px}
+th{font-size:18px;font-weight:600;color:var(--ink-3);text-align:left;white-space:nowrap;
+   padding:0 0 10px;border-bottom:1px solid var(--rule-2)}
+td{padding:11px 0;border-bottom:1px solid var(--rule);line-height:1.32;vertical-align:top}
+td+td,th+th{padding-left:20px}
+th.r,td.r{text-align:right}
+tr.hl td{color:var(--weak);font-weight:650}
+tr:last-child td{border-bottom:none}
+table.s{font-size:19px}
+table.s td{padding:9px 0}
+table.s td+td{padding-left:20px}   /* table.s가 td+td 여백을 덮어써서 다시 준다 */
+.nw{white-space:nowrap}
+tr.me td{font-weight:650}                        /* 비교표에서 내 모델 행 */
+
+/* 이름과 값이 짝을 이루는 작은 목록 */
+.kv{display:grid;grid-template-columns:80px 1fr;gap:7px 16px;font-size:17px;line-height:1.4}
+.kv .k{color:var(--ink-3)}
+.kv .v{color:var(--ink-2)}
+
+/* before 와 after 사이에 두는 화살표 */
+.arw{width:44px;height:18px;margin:0 16px;vertical-align:middle;fill:none;
+     stroke:var(--ink-3);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+/* 아키텍처 그래프 */
+.arch{display:block;width:100%;height:auto}
+.arch .bx{fill:none;stroke:var(--rule-2);rx:6}
+.arch .bx.hi{stroke:var(--accent);fill:var(--accent-soft)}
+.arch .ttl{font-size:22px;font-weight:650;fill:var(--ink)}
+.arch text.hi-t{fill:var(--accent)}   /* .ttl-s 보다 뒤에 와도 이기도록 */
+.arch .sub2{font-size:16px;fill:var(--ink-3)}
+.arch .ln{fill:none;stroke:var(--ink-3);stroke-width:1.7}
+.arch .ln.dash{stroke-dasharray:7 6}
+.arch .edge{font-size:15px;fill:var(--ink-3)}
+.arch .sub3{font-size:15px;fill:var(--ink-3)}
+.arch .ttl-s{font-size:19px;font-weight:650;fill:var(--ink)}
+.arch .host{fill:none;stroke:var(--rule);stroke-dasharray:6 7}
+
+/* 막대 */
+.bar{display:grid;grid-template-columns:148px 1fr 84px;align-items:center;gap:16px;font-size:20px;margin-bottom:11px}
+.track{height:15px;background:color-mix(in srgb,var(--ink) 8%,transparent);border-radius:2px}
+.fill{display:block;height:100%;border-radius:2px;background:var(--accent)}
+.fill.dim{background:var(--before)}
+.bval{text-align:right;font-weight:650}
+
+.pair{margin-bottom:20px}
+.pair-t{font-size:20px;color:var(--ink-2);margin-bottom:8px}
+.pb{display:grid;grid-template-columns:112px 1fr 96px;align-items:center;gap:14px;font-size:19px;margin-top:6px}
+.pb-cap{color:var(--ink-3);white-space:nowrap}
+.pb-val{text-align:right;font-weight:650;font-size:21px}
+
+/* 경로 도식 */
+.flow{display:flex;flex-direction:column;gap:10px}
+.node{border:1px solid var(--rule-2);border-radius:4px;padding:10px 15px;font-size:19px;line-height:1.3}
+.node.on{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.node.off{border-style:dashed;color:var(--ink-3)}
+.node .n-sub{display:block;font-size:16px;color:var(--ink-3);margin-top:3px}
+.fan{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.tag{display:inline-block;font-size:18px;color:var(--accent);border:1px solid var(--accent);
+     border-radius:999px;padding:3px 13px;margin:0 7px 8px 0}
+
+/* 단계 노출: 자리를 차지한 채 투명도만 바뀌므로 배치가 흔들리지 않는다 */
+.step{opacity:0;transition:opacity .2s linear}
+.step.on{opacity:1}
+
+/* ── 표지 ──────────────────────────────────────────────────── */
+.cover{padding:0 92px;display:flex;flex-direction:column;justify-content:center}
+.cover h1{font-size:88px;letter-spacing:-.03em}
+.cover .tagline{font-size:29px;color:var(--ink-2);margin-top:20px;line-height:1.4}
+.cover .who{margin-top:62px;border-top:1px solid var(--rule);padding-top:26px;
+  display:flex;gap:60px;align-items:baseline}
+.cover .who .nm{font-size:29px;font-weight:650;white-space:nowrap}
+.cover .who .nm span{font-size:21px;color:var(--ink-2);font-weight:400;margin-left:10px}
+.cover .who .org{font-size:20px;color:var(--ink-2);line-height:1.6}
+.cover .tagline .i{color:var(--ink);font-weight:650}   /* 머리글자만 제목과 같은 색과 굵기로 */
+
+/* ── 화면 아래 표시줄 ───────────────────────────────────────── */
+#hud{position:fixed;left:0;right:0;bottom:0;height:40px;display:flex;align-items:center;
+     gap:16px;padding:0 20px;font-size:13px;color:var(--ink-3);
+     font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+     background:linear-gradient(to top,var(--bg),transparent);transition:opacity .2s}
+#hud.off{opacity:0}
+#hud .grow{flex:1}
+#bar{position:fixed;left:0;bottom:0;height:2px;background:var(--accent);width:0;
+     transition:width .18s linear}
+#notes{position:fixed;right:18px;bottom:52px;width:470px;max-height:46vh;overflow:auto;
+       background:var(--bg);border:1px solid var(--rule-2);border-radius:6px;padding:16px 18px;
+       font-size:15px;line-height:1.65;color:var(--ink-2);display:none;white-space:pre-wrap}
+#notes.on{display:block}
+#help{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 94%,transparent);
+      display:none;align-items:center;justify-content:center}
+#help.on{display:flex}
+#help div{font-size:19px;line-height:2;color:var(--ink-2)}
+kbd{font-family:ui-monospace,Menlo,monospace;border:1px solid var(--rule-2);border-radius:4px;
+    padding:1px 8px;color:var(--ink);font-size:16px}
+</style>
+</head>
+<body>
+
+<div id="viewport"><div id="stage">
+
+<!-- 1 표지 ─────────────────────────────────────────────────── -->
+<section class="slide cover" data-steps="0" data-title="표지">
+  <h1>KAVA</h1>
+  <div class="tagline"><span class="i">K</span>orean <span class="i">A</span>gentic
+    <span class="i">V</span>ision <span class="i">A</span>ssistant<br>
+    한국어 온디바이스 멀티모달 에이전트 <br>
+  </div>
+  <div class="tagline">Vision Encoder와 LM을 결합한 1.8B VLM(KLaVA)을 구축하고, 16GB 맥북 한 대에서 구동합니다
+  </div>
+  <div class="who">
+    <div class="nm">김광수 <span>grant.kim</span></div>
+    <div class="org">카카오부트캠프 4기 AI 실무개발 과정<br>
+      github.com/kksoo1769/KAVA</div>
+  </div>
+  <p class="note" hidden>안녕하세요. 카카오부트캠프 4기 AI 실무개발 과정을 진행 중인 grant, 김광수라고 합니다. 저는 한국어 중심의 멀티모달 모델 KLaVA를 구축하고, 에이전트로 만들어 16GB 메모리의 맥북에서 여유 있게 사용할 수 있는 온디바이스 AI KAVA를 만드는 프로젝트를 진행하였습니다.</p>
+</section>
+
+<!-- 2 한 장 요약 ───────────────────────────────────────────── -->
+<section class="slide" data-steps="2" data-title="한 장 요약">
+  <div class="head">
+    <div class="no">Executive Summary</div>
+    <h1>경쟁력 있는 성능의 온디바이스 AI 에이전트</h1>
+  </div>
+  <div class="cols c2u">
+    <div>
+      <h3>동급 오픈 웨이트 모델과 비교 <span class="tiny">VLMEvalKit 평가</span></h3>
+      <table class="s">
+        <tr><th>모델</th><th class="r">크기</th><th class="r">K-SEED<span class="tiny" style="display:block">시각 이해</span></th>
+            <th class="r">GQA<span class="tiny" style="display:block">관계 추론</span></th>
+            <th class="r">K-MMBench<span class="tiny" style="display:block">한국어 종합</span></th>
+            <th class="r">K-DTCBench<span class="tiny" style="display:block">문서 판독</span></th></tr>
+        <tr class="me"><td>KLaVA</td><td class="r">1.8B</td><td class="r mark">74.0</td><td class="r mark">58.9</td><td class="r">64.3</td><td class="r bad">44.6</td></tr>
+        <tr><td>VARCO-VISION-2.0</td><td class="r">1.7B</td><td class="r">72.3</td><td class="r">51.9</td><td class="r">70.4</td><td class="r">68.8</td></tr>
+        <tr><td>Qwen2.5-VL-Instruct</td><td class="r">3B</td><td class="r">72.2</td><td class="r">58.8</td><td class="r">72.3</td><td class="r">82.1</td></tr>
+        <tr><td>InternVL3</td><td class="r">2B</td><td class="r">68.7</td><td class="r">51.3</td><td class="r">69.2</td><td class="r">67.9</td></tr>
+        <tr><td>Kanana-1.5-V</td><td class="r">3B</td><td class="r">74.6</td><td class="r">15.4 †</td><td class="r">72.4</td><td class="r">87.5</td></tr>
+      </table>
+      <p class="tiny" style="margin-top:10px">파라미터가 절반인데 시각 이해와 관계 추론은 3B급과 견줍니다.
+        <b>GQA는 다섯 모델 중 1위.</b> 문서 판독만 혼자 최하위입니다.
+        † Kanana의 GQA는 단답 형식을 따르지 못해 나온 값입니다.</p>
+    </div>
+    <div class="vrule step" data-s="1">
+      <h3>그 약점을 구조로 메우고 최적화된 서빙</h3>
+      <div class="mid" style="margin-bottom:6px"><span class="was">44.2%</span><svg class="arw" viewBox="0 0 44 18" aria-hidden="true"><path d="M2 9h36M32 3l6 6-6 6"/></svg><span class="now">62.1%</span></div>
+      <div class="tiny" style="margin-bottom:22px">한국어 문서 판독, K-DTCBench 240문항</div>
+      <div class="mid" style="margin-bottom:6px"><span class="was">9.8초</span><svg class="arw" viewBox="0 0 44 18" aria-hidden="true"><path d="M2 9h36M32 3l6 6-6 6"/></svg><span class="now">0.6초</span></div>
+      <div class="tiny" style="margin-bottom:22px">이미지 한 장 글자 인식, 같은 맥북</div>
+      <div class="mid" style="margin-bottom:6px"><span class="was">17.03GB</span><svg class="arw" viewBox="0 0 44 18" aria-hidden="true"><path d="M2 9h36M32 3l6 6-6 6"/></svg><span class="now">2.69GB</span></div>
+      <div class="tiny">긴 문맥 질문 최대 메모리. 사용 중 총 메모리는 5GB 내외</div>
+    </div>
+  </div>
+  <div class="step" data-s="2" style="margin-top:40px;border-top:1px solid var(--rule);padding-top:24px">
+    <div class="cols c2">
+      <div class="cols c2" style="gap:40px">
+        <div><h3 class="acc">1. 모델 구축</h3><ul class="tight">
+          <li>구성 요소들을 실측으로 선정</li><li>230만 규모의 데이터셋 설계</li><li>LLaVA식 두 단계 학습</li></ul></div>
+        <div><h3 class="acc">2. 그래프 기반 에이전트화</h3><ul class="tight">
+          <li>실패 원인을 통제 실험으로 분리</li><li>그래프 기반 경로 분기</li><li>필요한 경로에서 근거 주입</li></ul></div>
+      </div>
+      <div class="cols c2 vrule" style="gap:40px">
+        <div><h3 class="acc">3. 최적화</h3><ul class="tight">
+          <li>OCR 서버 제거</li><li>MLX로 추론 스택 재구현</li><li>어댑터 토글로 LM 공유</li></ul></div>
+        <div><h3 class="acc">4. 서빙</h3><ul class="tight">
+          <li>SSE 스트리밍 계약 고정</li><li>세션 트랜잭션과 중복 요청 거절</li><li>교체 가능한 추론 백엔드</li></ul></div>
+      </div>
+    </div>
+  </div>
+  <p class="note" hidden>먼저, 학습된 모델과 동급 open weight 베이스라인들과 비교한 표입니다. 1.8B 규모로 만든 KLaVA가 시각 이해 벤치마크 K-SEED에서 74.0, 관계 추론 벤치마크 GQA에서 58.9을 얻었습니다. 파라미터가 절반인데 베이스라인들과 견줄 만하고, GQA는 다섯 모델 중 가장 높은 성능을 보였습니다. 반면, 한국어 문서 판독을 평가하는 K-DTCBench에서는 44.6으로 큰 차이로 뒤졌습니다. 먼저 성능이 떨어지는 부분을 향상시키고자 했습니다. 문서 판독 벤치마크에서는 그래프 구조를 사용해 62.1%까지 정확도를 올렸고, 글자 인식은 9.8초에서 0.6초로, 긴 문맥에서의 최대 메모리는 17기가에서 2.7기가로 줄여 맥북 에어 한 대에 올릴 수 있었습니다. 다음과 같은 순서로 프로젝트를 진행했습니다. 먼저 모델을 구축하는 과정에서 구성 요소들의 후보들을 리스트업하여 실측으로 선택하고, 230만 개 정도의 데이터를 설계해 LLaVA식 두 단계 학습을 진행했습니다. 다음에는 그래프 기반 구조와 함께 에이전트로 만들었습니다. 잘 못하는 원인을 통제 실험을 통해 분리하여 경로를 분기하고, 각 경로에서 근거를 주입해 정확도를 올렸습니다. 이후에는 최적화를 진행했습니다. 메모리에 상주하는 OCR 서버를 제거하고, 맥북에 native한 MLX로 추론 스택을 재구현하였습니다. 또한, 어댑터를 토글해 텍스트 경로와 이미지 경로에서 언어 모델을 공유된 메모리에서 사용해 메모리 사용량을 절반 줄였습니다. 마지막으로 FastAPI 기반으로 에이전트, 추론, 웹 서버 백앤드를 구현하여 localhost 웹에서 사용할 수 있도록 만들었습니다.</p>
+</section>
+
+<!-- 3 아키텍처 ─────────────────────────────────────────────── -->
+<section class="slide" data-steps="0" data-title="아키텍처">
+  <div class="head">
+    <div class="no">아키텍처</div>
+    <h1>세 서버로 나누고, 언어 모델은 하나만</h1>
+  </div>
+
+  <svg class="arch" viewBox="0 0 1416 340" role="img"
+       aria-label="웹 화면과 에이전트 서버, KLaVA 추론 서버로 이어지는 KAVA 아키텍처">
+    <defs>
+      <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="var(--ink-3)"/>
+      </marker>
+      <marker id="ahb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="var(--ink-3)"/>
+      </marker>
+    </defs>
+
+    <!-- 기기 경계 -->
+    <rect class="host" x="1" y="12" width="1060" height="308" rx="10"/>
+    <text class="sub2" x="18" y="313">MacBook Air M1 16GB</text>
+
+    <!-- 웹 화면 -->
+    <rect class="bx" x="20" y="80" width="200" height="90"/>
+    <text class="ttl" x="40" y="116">웹 화면</text>
+    <text class="sub2" x="40" y="142">Next.js, SSE 수신</text>
+
+    <!-- 에이전트 서버 -->
+    <rect class="bx hi" x="320" y="62" width="300" height="126"/>
+    <text class="ttl hi-t" x="344" y="100">에이전트 서버</text>
+    <text class="sub2" x="344" y="128">FastAPI, LangGraph</text>
+    <text class="sub2" x="344" y="152">경로 분기, 도구 호출, 세션</text>
+
+    <!-- KLaVA 추론 서버 -->
+    <rect class="bx" x="690" y="80" width="290" height="90"/>
+    <text class="ttl" x="712" y="116">KLaVA 추론 서버</text>
+    <text class="sub2" x="712" y="142">FastAPI, MLX. 단일 워커와 큐</text>
+
+    <!-- 공유 언어 모델 -->
+    <rect class="bx" x="690" y="205" width="290" height="85"/>
+    <text class="ttl" x="712" y="240">EXAONE-4.0-1.2B</text>
+    <text class="sub2" x="712" y="266">하나만 메모리에 상주, 어댑터로 전환</text>
+
+    <!-- 글자 인식 -->
+    <rect class="bx" x="320" y="222" width="300" height="83"/>
+    <text class="ttl" x="344" y="256">글자 인식</text>
+    <text class="sub2" x="344" y="282">Swift, Apple Vision. 세 경로 병렬</text>
+
+    <!-- 외부 검색 -->
+    <rect class="bx" x="1140" y="80" width="276" height="90" stroke-dasharray="7 6"/>
+    <text class="ttl" x="1162" y="116">외부 검색 API</text>
+    <text class="sub2" x="1162" y="142">Tavily. 선택 사항</text>
+
+    <!-- 연결 -->
+    <path class="ln" d="M220 125 H310" marker-end="url(#ah)"/>
+    <path class="ln" d="M620 125 H680" marker-end="url(#ah)"/>
+    <path class="ln" d="M470 188 V212" marker-end="url(#ah)"/>
+    <text class="edge" x="486" y="207">필요할 때만 실행</text>
+    <path class="ln dash" d="M835 170 V197" marker-start="url(#ahb)" marker-end="url(#ah)"/>
+    <text class="edge" x="851" y="192">어댑터 켜고 끄기</text>
+    <path class="ln dash" d="M470 62 V36 H1278 V70" marker-end="url(#ah)"/>
+    <text class="edge" x="1268" y="28" text-anchor="end">외부 유출은 검색어 뿐</text>
+  </svg>
+
+  <div style="margin-top:22px;border-top:1px solid var(--rule);padding-top:18px">
+    <h3 style="margin-bottom:14px">기술 스택</h3>
+    <div class="cols c2" style="gap:56px">
+      <div class="kv">
+        <span class="k">학습</span><span class="v">PyTorch, transformers, PEFT, accelerate</span>
+        <span class="k">데이터</span><span class="v">공개 데이터 정제, 합성 데이터 생성 파이프라인</span>
+        <span class="k">추론</span><span class="v">MLX, Apple Silicon. PyTorch</span>
+        <span class="k">평가</span><span class="v">VLMEvalKit</span>
+      </div>
+      <div class="kv">
+        <span class="k">에이전트</span><span class="v">LangGraph, LangChain</span>
+        <span class="k">서빙</span><span class="v">FastAPI, Pydantic, SSE, 스레드와 큐</span>
+        <span class="k">네이티브</span><span class="v">Swift, Apple Vision, ImageIO</span>
+        <span class="k">화면</span><span class="v">Next.js, Playwright</span>
+      </div>
+    </div>
+  </div>
+  <p class="note" hidden>구조는 웹 화면과 에이전트 서버, 추론 서버로 나눴습니다. 에이전트 서버가 이미지 종류를 보고 경로를 정하고, 추론 서버는 언어 모델을 하나만 올려두고 어댑터를 켜고 끄면서 이미지용과 텍스트용으로 공유합니다. 글자 인식은 맥에 내장된 기능을 Swift 실행 파일로 감싸서 필요할 때만 호출하였습니다. 밖으로 나가는 건 웹 검색의 경우, 검색어 한 줄뿐입니다.</p>
+</section>
+
+<!-- 4 구성 요소 선정 ───────────────────────────────────────────── -->
+<section class="slide" data-steps="2" data-title="구성 요소 선정">
+  <div class="head">
+    <div class="no"><b>01</b> &nbsp; 한국어 중심 VLM 구축</div>
+    <h1>구성 요소는 실측을 통해 선택</h1>
+    <div class="sub">EXAONE-4.0-1.2B 와 SigLIP2-so400m NaFlex 를 2층 MLP 커넥터로 연결. 합계 약 1.8B</div>
+  </div>
+  <div class="cols c2u">
+    <div>
+      <h3>같은 한국어 3문장, 토크나이저 4종 실측</h3>
+      <div class="bar"><span>EXAONE 4.0</span><span class="track"><i class="fill" style="width:74.6%"></i></span><span class="bval">132</span></div>
+      <div class="bar"><span>KANANA 1.5</span><span class="track"><i class="fill dim" style="width:82.5%"></i></span><span class="bval">146</span></div>
+      <div class="bar"><span>Llama 3.2</span><span class="track"><i class="fill dim" style="width:82.5%"></i></span><span class="bval">146</span></div>
+      <div class="bar"><span>Qwen3</span><span class="track"><i class="fill dim" style="width:100%"></i></span><span class="bval">177</span></div>
+      <ul class="tight" style="margin-top:16px">
+        <li>EXAONE은 <code>게임</code>을 통째로, Qwen3는 <code>게</code>와 <code>임</code>으로 분해</li>
+        <li>영어는 4종이 비슷, <b>한국어에서만 격차</b></li>
+        <li>온디바이스에서 토큰 수가 곧 지연 시간</li>
+      </ul>
+    </div>
+    <div class="vrule stack">
+      <div class="step" data-s="1">
+        <h3>이미지 인코더: SigLIP2 NaFlex</h3>
+        <ul class="tight">
+          <li>가변 해상도, 토큰 예산 고정</li>
+          <li>남는 자리는 마스크로 제거</li>
+          <li>실제 이미지는 해상도와 종횡비가 제각각</li>
+        </ul>
+      </div>
+      <div class="step" data-s="2">
+        <div class="rule"></div>
+        <h3 style="margin-top:20px">시각 토큰 예산 576에서 784로</h3>
+        <ul class="tight">
+          <li>K-DTCBench <b class="mark">+3.4</b></li>
+          <li>표 40.0에서 <b class="mark">47.5</b>로</li>
+          <li>문서는 변화 없음, 속도도 동일</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <p class="note" hidden>먼저 모델 구축부터 말씀 드리겠습니다. 언어 모델과 이미지 인코더를 MLP 커넥터로 이어 붙였으며, 전부 합쳐서 1.8B 규모입니다. 구성 요소는 벤치마크 표만 보고 고르지 않았습니다. 네 후보의 토크나이저에 같은 한국어 문장을 직접 넣어 봤는데, EXAONE이 132 토큰, KANANA와 LLama가 146 토큰, Qwen3이 177 토큰이었습니다. 영어에서는 넷이 비슷했고 한국어에서만 토큰 효율성에 차이가 있었습니다. 온디바이스에서 토큰 효율성은 지연 시간과 컨텍스트 윈도우에 큰 영향을 미치므로, 언어 모델을 EXAONE을 사용했습니다. 이미지 인코더는 가변 해상도를 지원하는 SigLIP2 NaFlex를 썼고, 이미지 한 장에 쓰는 토큰을 576개에서 784개로 늘렸더니 표에서 7.5점이 올랐습니다.</p>
+</section>
+
+<!-- 5 인코더 폐기 ─────────────────────────────────────────── -->
+<section class="slide" data-steps="2" data-title="인코더 폐기">
+  <div class="head">
+    <div class="no"><b>01</b> &nbsp; 한국어 중심 VLM 구축</div>
+    <h1>직접 설계해 사전학습한 인코더 폐기</h1>
+    <div class="sub">계층형 구조, 앞단은 선형 복잡도 믹서 뒷단은 어텐션, ImageNet-1K 사전학습. 인코더만 교체해 ablation</div>
+  </div>
+  <div class="cols c2u">
+    <div>
+      <table>
+        <tr><th>벤치마크</th><th class="r">직접 만든 인코더</th><th class="r">SigLIP2</th><th class="r">변화</th></tr>
+        <tr><td>K-MMBench</td><td class="r">41.5</td><td class="r">60.7</td><td class="r">+19.2</td></tr>
+        <tr><td>MMBench-EN</td><td class="r">47.2</td><td class="r">63.8</td><td class="r">+16.6</td></tr>
+        <tr><td>K-SEED</td><td class="r">56.2</td><td class="r">70.1</td><td class="r">+13.9</td></tr>
+        <tr><td>SEED-IMG</td><td class="r">58.5</td><td class="r">69.8</td><td class="r">+11.3</td></tr>
+        <tr><td>ScienceQA</td><td class="r">54.7</td><td class="r">62.8</td><td class="r">+8.1</td></tr>
+        <tr><td>GQA</td><td class="r">53.0</td><td class="r">58.5</td><td class="r">+5.5</td></tr>
+        <tr class="hl"><td>K-DTCBench 문서와 표, 차트</td><td class="r">38.8</td><td class="r">40.8</td><td class="r">+2.0</td></tr>
+      </table>
+    </div>
+    <div class="vrule stack">
+      <div class="step" data-s="1">
+        <h3>배운 것</h3>
+        <ul>
+          <li>90M을 400M으로 키운 것만으로 큰 폭 상승
+            <span class="t">작은 모델은 파라미터 규모 자체가 효과</span></li>
+          <li>사전학습 데이터 규모가 결정적
+            <span class="t">ImageNet-1K로는 격차를 못 메움</span></li>
+        </ul>
+      </div>
+      <div class="step" data-s="2">
+        <div class="rule"></div>
+        <div class="big neg" style="margin-top:20px">+2.0</div>
+        <div class="big-cap">다른 항목이 5점에서 19점씩 오르는 동안 문서 판독만 제자리.<br>
+          <b class="bad">인코더를 바꿔서 풀릴 문제가 아니라는 신호</b></div>
+      </div>
+    </div>
+  </div>
+  <p class="note" hidden>사실 처음에는 이미지 인코더도 직접 설계해서 ImageNet으로 사전학습했습니다. 앞쪽 고해상도 단계는 2D 공간 구조를 잘 인식하면서 계산량이 선형으로 늘어나는 믹서와 함께 어텐션을 쓰고 뒤쪽에서만 어텐션을 쓰는 구조였습니다. 하지만 인코더만 바꿔 비교했더니 SigLIP2가 전 항목에서 앞섰습니다. 여기서 두 가지를 배웠습니다. 파라미터를 90M에서 400M으로 키운 것만으로 크게 올랐다는 것, 그리고 작은 모델일수록 인코더를 얼마나 큰 데이터로 사전학습했느냐가 성능에 결정적인 영향을 미친다는 것이었습니다. 그런데 문서 판독에서만 성능 향상이 2점에 그쳤습니다. 다른 곳들에서는 모두 크게 오르지만 여기만 안 오른다는 건, 인코더를 바꿔서 풀릴 문제가 아니라는 뜻이었습니다.</p>
+</section>
+
+<!-- 6 학습 데이터 ─────────────────────────────────────────── -->
+<section class="slide" data-steps="2" data-title="학습 데이터">
+  <div class="head">
+    <div class="no"><b>01</b> &nbsp; 한국어 중심 VLM 구축</div>
+    <h1>230만 개의 데이터셋을 목적에 맞춰 설계</h1>
+  </div>
+  <div class="cols c2u">
+    <div>
+      <table class="s">
+        <tr><th>단계</th><th>학습 대상</th><th class="r">행 수</th></tr>
+        <tr><td><b>1단계</b><span class="tiny" style="display:block">이미지와 말 정렬</span></td>
+            <td>커넥터만<span class="tiny" style="display:block">LM과 인코더는 freeze. 한국어 캡션 73%</span></td>
+            <td class="r">839,691</td></tr>
+        <tr><td><b>2단계</b><span class="tiny" style="display:block">지시 학습</span></td>
+            <td>LoRA 어댑터, 커넥터, 이미지 인코더<span class="tiny" style="display:block">원 가중치는 보존해 망각 방지</span></td>
+            <td class="r">1,460,408</td></tr>
+      </table>
+      <div class="step" data-s="1" style="margin-top:26px">
+        <h3>2단계에서의 원칙 세 가지</h3>
+        <ul class="tight">
+          <li><b>비율 균형:</b> 문서와 글자 인식, 차트와 표를 전체의 30%</li>
+          <li><b>기존 능력 유지:</b> 영어 183,934행과 한국어 텍스트 99,523행 혼합</li>
+          <li><b>부족분은 합성:</b> 공개 데이터로 못 채우는 능력을 직접 생성</li>
+        </ul>
+      </div>
+    </div>
+    <div class="vrule step" data-s="2">
+      <h3>직접 만든 합성 데이터</h3>
+      <ul>
+        <li><b>구조 판독</b> 표와 차트 약 1000장에 각 8종 과제
+          <span class="t">헤더와 셀이 밀려 읽히는 문제를 교정</span></li>
+        <li><b>근거 거부</b>
+          <span class="t">없는 행이나 열을 물으면 지어내지 않고 없다고 답하기</span></li>
+        <li><b>이미지 종류 분류</b>
+          <span class="t">네 단어 중 하나로만 답하게 강제. 라우터가 쓰는 능력</span></li>
+        <li><b>좌표 제시</b>
+          <span class="t">잘린 영역 읽기, 확신 없는 대상의 위치를 두 자리 좌표로</span></li>
+        <li><b>한국어 사고 과정</b> 2,472행</li>
+      </ul>
+    </div>
+  </div>
+  <p class="note" hidden>학습 데이터는 두 단계로 설계했습니다. LLaVA에서 제안한 학습 방식을 따라 1단계는 커넥터만 학습시켜 이미지와 언어를 정렬하고, 2단계에서 LoRA 어댑터와 커넥터, 인코더를 같이 학습시킵니다. 2단계에서 세 가지를 신경 썼습니다. 문서와 표, 차트를 전체의 30%로 맞춰 비율을 잡아 범용 능력을 유지하고, 영어와 한국어 텍스트를 섞어 언어 모델이 원래 갖고 있던 능력을 잃지 않게 했습니다. 그리고 공개 데이터로 채우기 어려운 능력은 합성 데이터로 만들었습니다. 표와 차트에 여덟 종류 과제를 붙인 구조 판독, 이미지에 없는 걸 물으면 없다고 답하는 근거 거부, 이미지 종류를 네 단어로만 답하는 분류, 질문에 답하기 위해 필요한 근거의 위치 좌표 제시, 한국어 reasoning 과정 같은 것들입니다.</p>
+</section>
+
+<!-- 7 학습 문제 해결 ──────────────────────────────────────── -->
+<section class="slide" data-steps="1" data-title="학습 문제 해결">
+  <div class="head">
+    <div class="no"><b>01</b> &nbsp; 한국어 중심 VLM 구축</div>
+    <h1>학습에서 부딪힌 문제와 해결</h1>
+  </div>
+  <table>
+    <tr><th style="width:26%">문제</th><th style="width:30%">원인</th><th>해결 방법</th></tr>
+    <tr><td>오른쪽 패딩 배치에서 위치 정보 손상</td>
+        <td>LM 기본 구현이 위치 번호를 단순 순번으로 부여</td>
+        <td>어텐션 마스크 누적합으로 위치 번호를 직접 계산해 전달</td></tr>
+    <tr><td>텍스트만 있는 배치에서 커넥터가 학습에서 이탈</td>
+        <td>분산 학습이 미사용 파라미터를 오류로 처리</td>
+        <td>손실에 0을 곱한 항을 더해 그래프에 항상 연결</td></tr>
+    <tr><td>가변 해상도의 빈 자리가 LM 입력에 혼입</td>
+        <td>NaFlex는 이미지마다 유효 패치 수가 다름</td>
+        <td>마스크로 걸러 실제 패치만 연결</td></tr>
+    <tr><td>이미지 자리 표시자의 분해 방식을 보장 불가</td>
+        <td>토크나이저마다 처리가 다름</td>
+        <td>문자열을 나눈 뒤 사전 정의한 인덱스를 직접 삽입</td></tr>
+  </table>
+  <div class="step" data-s="1" style="margin-top:34px;border-top:1px solid var(--rule);padding-top:24px">
+    <div class="cols c3">
+      <div><div class="mid"><span class="now">A100 40GB 4장</span></div>
+        <div class="tiny" style="margin-top:8px">bf16 AMP, fp32 마스터 파라미터</div></div>
+      <div><div class="mid"><span class="now">11,410 스텝</span></div>
+        <div class="tiny" style="margin-top:8px">2단계 기준</div></div>
+      <div><div class="mid"><span class="now">약 32시간</span></div>
+        <div class="tiny" style="margin-top:8px">2단계 학습 소요</div></div>
+    </div>
+  </div>
+  <p class="note" hidden>학습하면서 부딪힌 문제들을 정리하였습니다. 오른쪽 패딩이 있는 배치에서 위치 정보가 깨졌는데, 언어 모델 EXAONE의 기본 구현이 위치 번호를 단순 순번으로 매기는 게 원인이었고, 이를 어텐션 마스크 누적합으로 계산해 전달함으로써 해결하였습니다. 텍스트만 있는 배치에서는 커넥터가 학습에서 빠져 분산 학습이 에러를 냈는데, 손실에 0을 곱한 항을 더해서 항상 연결되게 함으로써 해결할 수 있었습니다. 이미지 자리 표시자를 토크나이저가 어떻게 쪼갤지 보장할 수 없는 문제는 문자열을 나눈 뒤에 인덱스를 직접 삽입해서 해결했습니다. 학습 한 번에는 A100 40GB 4장을 사용해 약 11,000 스텝과 32시간이 소요되었습니다.</p>
+</section>
+
+<!-- 8 성능 평가 ───────────────────────────────────────────── -->
+<section class="slide" data-steps="0" data-title="성능 평가">
+  <div class="head">
+    <div class="no"><b>01</b> &nbsp; 한국어 중심 VLM 구축</div>
+    <h1>강점과 약점</h1>
+    <div class="sub">동급 오픈 웨이트 모델 4종과 12개 벤치마크 비교. VLMEvalKit, 객관식 8종은 동일 LLM Judge 사용.</div>
+  </div>
+  <div class="cols c3">
+    <div>
+      <div class="big acc">58.9</div>
+      <div class="big-cap"><b>GQA</b> 관계 추론<br>비교 5개 모델 중 <b>1위</b>
+        <span class="tiny" style="display:block">2위 Qwen2.5-VL 3B 58.8</span></div>
+    </div>
+    <div>
+      <div class="big acc">74.0</div>
+      <div class="big-cap"><b>K-SEED</b> 시각 이해<br>1위 Kanana 3B 74.6에 근접
+        <span class="tiny" style="display:block">Kanana는 3B, KLaVA는 1.8B</span></div>
+    </div>
+    <div>
+      <div class="big neg">44.6</div>
+      <div class="big-cap"><b>K-DTCBench</b> 한국어 문서와 표, 차트<br><b class="bad">혼자 최하위</b>
+        <span class="tiny" style="display:block">비교 모델 67.9에서 87.5</span></div>
+    </div>
+  </div>
+  <div style="margin-top:44px;border-top:1px solid var(--rule);padding-top:26px">
+    <div class="cols c2">
+      <div><h3>비교 대상</h3>
+        <p class="small">VARCO-VISION-2.0 1.7B, Qwen2.5-VL-Instruct 3B, InternVL3 2B, Kanana-1.5-V 3B</p></div>
+      <div><h3>남은 과제</h3>
+        <p class="small">파라미터를 늘려 재학습하는 길은 자원상 불가능.
+          <b>모델을 고치는 대신 근거를 주는 경로</b>를 찾기로 결정</p></div>
+    </div>
+  </div>
+  <p class="note" hidden>학습을 마치고 VARCO, Qwen, KANANA, InternVL과 같은 비슷한 규모의 오픈 웨이트 모델과 열두 개 벤치마크에서 비교했습니다. 관계 추론을 평가하는 GQA는 58.9로 다섯 모델 중 1위였고, 시각 이해 K-SEED도 74.0으로 상위권이었습니다. 파라미터가 3B인 모델들과 비교한 결과라 의미가 있다고 생각했습니다. 그런데 한국어 문서와 표를 읽는 K-DTCBench에서 비교 모델들이 67에서 87의 점수를 내는 반면, 44.6으로 크게 뒤졌습니다. 하지만 파라미터를 늘리거나 시각 토큰의 개수를 늘리는 것은 주어진 자원상 어려워보였습니다.</p>
+</section>
+
+<!-- 9 가설과 통제 실험 ────────────────────────────────────── -->
+<section class="slide" data-steps="2" data-title="가설과 실험">
+  <div class="head">
+    <div class="no"><b>02</b> &nbsp; 그래프 구조로 약점 보완</div>
+    <h1>고치기 전에, 왜 못 읽는지부터 실험으로 확인</h1>
+  </div>
+  <div class="cols c2u">
+    <div class="stack">
+      <div>
+        <h3 class="acc">가설</h3>
+        <ul class="tight">
+          <li>글자를 못 보는 것이 아니라 <b>정답 영역에 배정되는 토큰이 부족</b>한 것</li>
+          <li>맞다면, 그 영역만 잘라 같은 예산으로 보여줄 때 같은 모델이 더 잘 읽어야 함</li>
+        </ul>
+      </div>
+      <div class="step" data-s="1">
+        <h3>설계</h3>
+        <ul class="tight">
+          <li>실패한 7개 샘플 선정</li>
+          <li>원 질문과 <b>글자를 그대로 옮겨 적으라는 질문</b>을 함께 입력</li>
+          <li>글자 인식 여부와 정답 여부를 분리해 관찰</li>
+        </ul>
+      </div>
+    </div>
+    <div class="vrule step" data-s="2">
+      <h3>결과</h3>
+      <div class="pair">
+        <div class="pb"><span class="pb-cap">전체 이미지</span><span class="track"><i class="fill dim" style="width:0%"></i></span><span class="pb-val">0건</span></div>
+        <div class="pb"><span class="pb-cap">근거 영역만</span><span class="track"><i class="fill" style="width:57.1%"></i></span><span class="pb-val">4건</span></div>
+      </div>
+      <p class="small" style="margin-top:6px">7건 중 정답 수. 근거 영역 기준 밀도가 <b>약 19배</b> 상승.</p>
+      <div class="rule" style="margin:24px 0"></div>
+      <p class="small"><b class="mark">가설 확인.</b> 가변 해상도 인코더는 면적과 무관하게 토큰 예산이 고정이므로,
+        영역을 좁히면 같은 예산이 그 영역에 집중됩니다.</p>
+    </div>
+  </div>
+  <p class="note" hidden>여기서 왜 잘 안 되는지 확인하고자 했습니다. "글자를 못 보는 게 아니라 정답이 있는 좁은 영역에 배정되는 토큰이 너무 적은 거라면, 그 영역만 잘라서 같은 예산으로 다시 보여줄 때 같은 모델이 더 잘 읽어야 한다."는 가설을 세웠습니다. 틀린 일곱 건을 골라서 원래 질문이랑 글자를 그대로 옮겨 적으라는 질문을 같이 던졌습니다. 전체 이미지로는 일곱 건 전부 틀렸는데, 잘라서 주니까 네 건이 맞았습니다. 근거가 있는 영역 기준으로 뭉개지지 않고 시각 토큰이 많이 할당된 것입니다.</p>
+</section>
+
+<!-- 10 실패 두 경로 ───────────────────────────────────────── -->
+<section class="slide" data-steps="2" data-title="실패 두 경로">
+  <div class="head">
+    <div class="no"><b>02</b> &nbsp; 그래프 구조로 약점 보완</div>
+    <h1>실패가 두 종류로 갈렸다</h1>
+  </div>
+  <div class="cols c2">
+    <div>
+      <table>
+        <tr><th>원인</th><th class="r">건수</th></tr>
+        <tr><td><b>해상도 부족</b> 잘라 주면 풀림
+          <span class="tiny" style="display:block;margin-top:5px">전화번호 뒷자리를 <code>568</code>에서 <code>5678</code>로 정확히 인식</span></td><td class="r">4</td></tr>
+        <tr class="step" data-s="1"><td><b class="bad">읽어도 답을 만들지 못함</b> 근거를 더 줘도 안 풀림
+          <span class="tiny" style="display:block;margin-top:5px">180, 210, 240, 270을 정확히 읽고도 합산 실패, 270으로 답변</span></td><td class="r">3</td></tr>
+      </table>
+      <p class="small step" data-s="1" style="margin-top:22px">
+        <b>해상도 문제와 취합 능력 문제는 다른 문제였습니다.</b> 같은 방법으로는 해결할 수 없습니다.</p>
+    </div>
+    <div class="vrule step" data-s="2">
+      <h3>그러면 근거 영역을 스스로 짚을 수 있는가</h3>
+      <div class="big neg">6개 모두 실패</div>
+      <div class="big-cap">이미지를 3x3 격자로 나누고 근거가 어느 칸인지 질문.<br>
+        <b class="bad">보기 순서를 뒤집어 재측정해도 세로축은 6건 모두 첫 보기 반복</b></div>
+      <div class="rule" style="margin:24px 0"></div>
+      <p class="small">모델은 <b>어디를 봐야 하는지 스스로 정하지 못합니다.</b>
+        잘라 읽는 경로를 올리려면 이 일을 누군가 대신해야 합니다.</p>
+    </div>
+  </div>
+  <p class="note" hidden>하지만 나머지 세 건은 잘라 입력으로 주어도 모델이 오답을 냈습니다. 180, 210, 240, 270이라는 숫자를 이미지에서 정확히 읽고도 합산을 못 해 270이라고 답했습니다. 즉 실패가 해상도 부족과 취합 실패, 두 종류로 나뉘었습니다. 그럼 어디를 봐야 하는지 모델이 스스로 짚을 수 있느냐도 확인했는데, 이미지를 3x3 격자로 나눠서 근거가 어느 칸이냐고 물으니 여섯 건 모두 틀렸습니다. 보기 순서를 뒤집어서 다시 물어도 첫 보기만 되풀이했습니다.</p>
+</section>
+
+<!-- 11 방향 전환 ─────────────────────────────────────────── -->
+<section class="slide" data-steps="2" data-title="방향 전환">
+  <div class="head">
+    <div class="no"><b>02</b> &nbsp; 그래프 구조로 약점 보완</div>
+    <h1>가설은 확인, 그러나 채택은 별개</h1>
+  </div>
+  <div class="cols c2">
+    <div>
+      <table>
+        <tr><th>잘라 읽기가 요구하는 것</th><th class="r">가능 여부</th></tr>
+        <tr><td>어디를 자를지 결정</td><td class="r bad">불가</td></tr>
+        <tr><td>잘라 읽은 조각을 취합</td><td class="r bad">불가</td></tr>
+      </table>
+      <ul class="tight step" data-s="1" style="margin-top:24px">
+        <li>둘 다 supervisor 같은 외부 모델의 몫</li>
+        <li>supervisor를 얹은 실험은 <b class="bad">정확도와 지연 시간 모두 열세</b></li>
+        <li>제한된 메모리에 모델을 하나 더 올릴 여유도 없음</li>
+        <li>잘라 읽기 경로는 검증만 하고 보류
+          <span class="t">모델이 취합을 하게 되면 그때 붙일 계획</span></li>
+      </ul>
+    </div>
+    <div class="vrule step" data-s="2">
+      <h3 class="acc">채택: 구조를 살린 텍스트를 컨텍스트에 주입</h3>
+      <table class="s">
+        <tr><th></th><th>잘라 다시 읽히기</th><th>구조화 텍스트 주입</th></tr>
+        <tr><td>어디를 볼지</td><td class="bad">누군가 지정 필요</td><td class="mark">전체를 훑음</td></tr>
+        <tr><td>취합</td><td class="bad">조각 재결합 필요</td><td class="mark">구조 그대로 전달</td></tr>
+        <tr><td>위험</td><td>오분할 시 근거 소실</td><td>오인식 글자가 그대로 전달</td></tr>
+        <tr><td>모델 호출</td><td>여러 번</td><td class="mark">한 번</td></tr>
+      </table>
+      <p class="small" style="margin-top:18px">오인식 위험은 규칙으로 차단.
+        인식 실패 칸은 지어내지 않고 <code>[미인식]</code>로 보존, 세 경로 병렬 인식으로 교차 검증.</p>
+    </div>
+  </div>
+  <p class="note" hidden>그래서 잘라 읽는 경로는 이번 구성에 넣지 않았습니다. 그 경로는 모델이 못 하는 일인 "어디를 자를지 정하는 것"과 "그 근거를 취합"하는 두 능력 요구합니다. 둘 다 supervisor 같은 외부 모델이 해야 하는데, 이를 사용한 실험에서 정확도 개선도 없었으며 지연 시간은 오히려 나빠졌습니다. 제한된 메모리에 더 큰 모델을 얹을 여유도 없었습니다. 대신 방향을 바꿨습니다. 글자 인식이 이미지 전체를 한 번에 읽어서 구조를 살린 텍스트로 만들고, 그걸 컨텍스트에 넣어서 다시 묻게 하였습니다. 인식하지 못한 부분은 지어내지 않고 미인식으로 남겼습니다.</p>
+</section>
+
+<!-- 12 그래프 구조 ───────────────────────────────────────── -->
+<section class="slide" data-steps="2" data-title="그래프 구조">
+  <div class="head">
+    <div class="no"><b>02</b> &nbsp; 그래프 구조로 약점 보완</div>
+    <h1>경로를 넷으로 나누고, 도움이 되는 쪽에만 근거를 넣는다</h1>
+  </div>
+
+  <svg class="arch" viewBox="0 0 1416 384" role="img"
+       aria-label="라우터가 네 경로로 나누고 문서와 표만 글자 인식을 거쳐 다시 묻는 그래프">
+    <defs>
+      <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto">
+        <path d="M0 0 L10 5 L0 10 z" fill="var(--ink-3)"/>
+      </marker>
+      <marker id="ahb2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="var(--ink-3)"/>
+      </marker>
+    </defs>
+    <!-- 입력과 라우터 -->
+    <rect class="bx" x="0" y="152" width="190" height="64"/>
+    <text class="ttl" x="16" y="191">질문과 이미지</text>
+
+    <rect class="bx hi" x="230" y="144" width="170" height="80"/>
+    <text class="ttl-s hi-t" x="248" y="178">router</text>
+    <text class="sub3" x="248" y="200">네 종류로 분류</text>
+
+    <!-- 도구함 -->
+    <rect class="bx" x="450" y="8" width="240" height="52"/>
+    <text class="ttl-s" x="470" y="32">도구함</text>
+    <text class="sub3" x="470" y="52">계산기, 웹 검색</text>
+
+    <!-- 텍스트 경로 -->
+    <rect class="bx hi" x="450" y="84" width="240" height="70"/>
+    <text class="ttl-s hi-t" x="470" y="110">text</text>
+    <text class="sub3" x="470" y="130">이미지가 없을 때</text>
+    <text class="sub3" x="470" y="148">어댑터를 끈 EXAONE</text>
+
+    <!-- 이미지 즉답 경로 -->
+    <rect class="bx" x="450" y="172" width="240" height="70"/>
+    <text class="ttl-s" x="470" y="198">vision</text>
+    <text class="sub3" x="470" y="218">자연 이미지와 차트</text>
+    <text class="sub3" x="470" y="236">KLaVA 즉답, 5.6초</text>
+
+    <!-- 글자 인식 세 경로 -->
+    <rect class="bx" x="450" y="258" width="240" height="30"/>
+    <text class="sub2" x="470" y="278">문서 구조 0.6초</text>
+    <rect class="bx" x="450" y="294" width="240" height="30"/>
+    <text class="sub2" x="470" y="314">숫자 정밀 0.5초</text>
+    <rect class="bx" x="450" y="330" width="240" height="30"/>
+    <text class="sub2" x="470" y="350">숫자 고속 0.1초</text>
+    <text class="edge" x="450" y="376">문서와 표. 세 경로를 동시에 실행해 실제 소요는 가장 느린 0.6초</text>
+
+    <!-- 병합과 재질의 -->
+    <rect class="bx" x="730" y="275" width="180" height="68"/>
+    <text class="ttl-s" x="748" y="303">ocr_merge</text>
+    <text class="sub3" x="748" y="325">구조 보존 병합</text>
+
+    <rect class="bx hi" x="950" y="275" width="240" height="68"/>
+    <text class="ttl-s hi-t" x="968" y="303">vision_with_ocr</text>
+    <text class="sub3" x="968" y="325">글자 근거와 함께 재질의</text>
+
+    <!-- 출력 -->
+    <rect class="bx" x="1250" y="152" width="166" height="64"/>
+    <text class="ttl" x="1268" y="191">답변</text>
+
+    <!-- 연결 -->
+    <path class="ln" d="M190 184 H222" marker-end="url(#ah2)"/>
+    <path class="ln" d="M400 184 H425"/>
+    <path class="ln" d="M425 119 V345"/>
+    <path class="ln" d="M425 119 H442" marker-end="url(#ah2)"/>
+    <path class="ln" d="M425 207 H442" marker-end="url(#ah2)"/>
+    <path class="ln" d="M425 273 H442" marker-end="url(#ah2)"/>
+    <path class="ln" d="M425 309 H442" marker-end="url(#ah2)"/>
+    <path class="ln" d="M425 345 H442" marker-end="url(#ah2)"/>
+
+    <path class="ln dash" d="M570 62 V82" marker-start="url(#ahb2)" marker-end="url(#ah2)"/>
+
+    <path class="ln" d="M690 273 H712"/>
+    <path class="ln" d="M690 309 H712"/>
+    <path class="ln" d="M690 345 H712"/>
+    <path class="ln" d="M712 273 V345"/>
+    <path class="ln" d="M712 309 H722" marker-end="url(#ah2)"/>
+    <path class="ln" d="M910 309 H942" marker-end="url(#ah2)"/>
+
+    <path class="ln" d="M690 119 H1230"/>
+    <path class="ln" d="M690 207 H1230"/>
+    <path class="ln" d="M1190 309 H1230"/>
+    <path class="ln" d="M1230 119 V309"/>
+    <path class="ln" d="M1230 184 H1242" marker-end="url(#ah2)"/>
+  </svg>
+
+  <div style="margin-top:16px;border-top:1px solid var(--rule);padding-top:16px">
+    <div class="cols c2">
+      <div class="step" data-s="1">
+        <h3>차트는 제외</h3>
+        <ul class="tight">
+          <li>차트는 글자가 구조를 이루지 않음. 가로축 <code>20대</code>가 <code>2q</code>로 오인식</li>
+          <li><b class="bad">주입하자 원래 맞히던 답을 오답으로.</b> 사진과 같은 경로로 전송</li>
+          <li>같은 이미지 후속 질문은 병합 결과를 재사용해 글자 인식을 건너뜀</li>
+        </ul>
+      </div>
+      <div class="step vrule" data-s="2">
+        <h3>라우터: 틀려도 되는 곳과 안 되는 곳</h3>
+        <p class="small">사진 200장 중 198장, 문서 40장 중 36장, 차트 40장 중 35장,
+          <b class="bad">표는 40장 중 20장.</b> 표와 문서는 같은 경로라 오분류해도 결과가 같습니다.
+          갈라야 하는 것은 차트뿐이고, <b>다른 종류가 차트로 잘못 간 경우는 320장 중 0건</b>입니다.</p>
+      </div>
+    </div>
+  </div>
+  <p class="note" hidden>그래프는 다음과 같이 구성하였습니다. 라우터가 작업을 텍스트 또는 네 종류의 이미지로 나누고, 문서랑 표만 글자 인식 세 갈래를 동시에 태워서 병합합니다. 셋이 동시에 도니까 실제로 드는 시간은 제일 느린 0.6초입니다. 차트에서 OCR 결과의 주입을 뺀 이유는 대부분의 차트의 글자가 구조화되지 않아 이를 맥락으로 주면 성능이 오히려 나빠졌기 때문입니다. "20대"라는 글자가 "2q"로 깨져서 들어가니까 원래 맞히던 답을 틀렸습니다. 라우터는 표를 절반이나 문서로 잘못 보내는데, 표랑 문서는 어차피 같은 경로라 결과가 같습니다. 중요한 건 차트인데, 다른 종류가 차트로 잘못 간 경우는 320장에서 한 건도 없었습니다.</p>
+</section>
+
+<!-- 13 결과 ──────────────────────────────────────────────── -->
+<section class="slide" data-steps="2" data-title="결과">
+  <div class="head">
+    <div class="no"><b>02</b> &nbsp; 그래프 구조로 약점 보완</div>
+    <h1>44.2%에서 62.1%로, 문서는 86.2%</h1>
+    <div class="sub">동일 설정, K-DTCBench 240문항. 단일 모델 KLaVA와 그래프 구조 KAVA 비교</div>
+  </div>
+  <div class="cols c2u">
+    <div>
+      <div class="pair">
+        <div class="pair-t">전체 240문항 <b class="mark">+17.9</b></div>
+        <div class="pb"><span class="pb-cap">KLaVA</span><span class="track"><i class="fill dim" style="width:44.2%"></i></span><span class="pb-val">44.2%</span></div>
+        <div class="pb"><span class="pb-cap">KAVA</span><span class="track"><i class="fill" style="width:62.1%"></i></span><span class="pb-val">62.1%</span></div>
+      </div>
+      <div class="pair">
+        <div class="pair-t">문서 80문항 <b class="mark">+33.7</b></div>
+        <div class="pb"><span class="pb-cap">KLaVA</span><span class="track"><i class="fill dim" style="width:52.5%"></i></span><span class="pb-val">52.5%</span></div>
+        <div class="pb"><span class="pb-cap">KAVA</span><span class="track"><i class="fill" style="width:86.2%"></i></span><span class="pb-val">86.2%</span></div>
+      </div>
+      <div class="pair">
+        <div class="pair-t">표 80문항 <b class="mark">+20.0</b></div>
+        <div class="pb"><span class="pb-cap">KLaVA</span><span class="track"><i class="fill dim" style="width:37.5%"></i></span><span class="pb-val">37.5%</span></div>
+        <div class="pb"><span class="pb-cap">KAVA</span><span class="track"><i class="fill" style="width:57.5%"></i></span><span class="pb-val">57.5%</span></div>
+      </div>
+    </div>
+    <div class="vrule stack">
+      <div class="step" data-s="1">
+        <h3>표가 문서보다 덜 오른 이유</h3>
+        <ul class="tight">
+          <li>위치 문제는 해결. <b>어디에 무엇이 있는지</b>는 텍스트가 알려 줌</li>
+          <li>비교와 합산은 여전히 모델의 몫</li>
+          <li><b class="bad">앞서 분리한 두 번째 실패가 그대로 잔존</b></li>
+        </ul>
+      </div>
+      <div class="step" data-s="2">
+        <div class="rule"></div>
+        <h3 style="margin-top:20px">Trade-off</h3>
+        <table class="s">
+          <tr><td>문항당 평균 시간</td><td class="r">5.6초에서 9.7초</td></tr>
+          <tr><td>차트 80문항</td><td class="r">42.5%로 동일</td></tr>
+          <tr><td>K-SEED 자연 이미지</td><td class="r">71.4%로 동일</td></tr>
+        </table>
+        <p class="tiny" style="margin-top:12px">경로가 같으므로 불변이 정상. 문항별 원본 기록은 저장소에 보존.</p>
+      </div>
+    </div>
+  </div>
+  <p class="note" hidden>결과적으로 이전에 성능이 크게 부족했던 벤치마크 240문항에서 정확도가 17.9% 향상되었습니다. 특히, 문서는 52.5%에서 86.2%로 올랐습니다. 표는 문서에 비해 20% 향상에 그쳤는데, 그 이유는 어디에 뭐가 있는지는 해결됐지만 셀을 읽어서 비교하고 합치는 건 여전히 모델 몫이기 때문이라고 생각합니다. 하지만 정확도가 오른 만큼 대가도 있었습니다. 앞에서 라우터가 이미지를 분류하는 과정이 추가되면서 문항당 지연 시간이 5.6초에서 9.7초로 늘었습니다.</p>
+</section>
+
+<!-- 14 OCR 서버 대체 ─────────────────────────────────────── -->
+<section class="slide" data-steps="2" data-title="OCR 서버 대체">
+  <div class="head">
+    <div class="no"><b>03</b> &nbsp; 16GB 맥북 안에서 구동</div>
+    <h1>의존성을 더하지 않고, native 프레임워크 사용</h1>
+  </div>
+  <div class="cols c3">
+    <div>
+      <h3>문제</h3>
+      <ul class="tight">
+        <li>PaddleOCR과 PPStructureV3 기반 별도 서버</li>
+        <li>전용 가상환경과 모델 다운로드</li>
+        <li>메모리 5GB 상주</li>
+        <li>이미지 한 장 <b class="bad">9.8초</b>, 표 구조 분석 <b class="bad">17.5초</b></li>
+      </ul>
+      <div class="rule" style="margin:22px 0"></div>
+      <h3>해결</h3>
+      <ul class="tight">
+        <li>맥 내장 Apple Vision을 Swift로 감쌈</li>
+        <li>단일 실행 파일, 필요할 때만 호출</li>
+      </ul>
+    </div>
+    <div class="step" data-s="1">
+      <div class="mid"><span class="was">9.8초</span><br><span class="now">0.6초</span></div>
+      <div class="big-cap"><b>약 16배</b> 단축. 가상환경과 모델 다운로드, 상주 서버까지 함께 제거</div>
+      <div class="rule" style="margin:22px 0"></div>
+      <h3>세 경로로 나눈 이유</h3>
+      <table class="s">
+        <tr><td style="width:32%">문서 구조</td><td>제목과 문단, 표를 마크다운으로 보존</td></tr>
+        <tr><td>숫자 정밀</td><td>언어 교정 켬. 문맥으로 보정</td></tr>
+        <tr><td>숫자 고속</td><td>언어 교정 끔. 숫자가 단어로 바뀌는 것 방지</td></tr>
+      </table>
+    </div>
+    <div class="step" data-s="2">
+      <h3>표 셀 병합 규칙 설계</h3>
+      <ul class="tight">
+        <li>빈 칸은 채우지 않고 <code>[미인식]</code>
+          <span class="t">모델로의 오류 전파 차단</span></li>
+        <li>숫자는 자릿수가 같을 때만 교체
+          <span class="t"><code>45.0%</code>를 <code>45</code>로 덮으면 단위 소실</span></li>
+        <li>한 행에 소수점이 셋 이상이면 누락 소수점 복원
+          <span class="t"><code>12.0</code>과 <code>15.0</code> 사이의 <code>210</code>은 <code>21.0</code></span></li>
+        <li>좌표는 소수점 두 자리 반올림
+          <span class="t">모델이 두 자리 정규화 좌표로 학습됨</span></li>
+      </ul>
+    </div>
+  </div>
+  <p class="note" hidden>이제 16기가 맥북에서 사용할 수 있게 만들고자 했습니다. 처음엔 로컬에서 돌아가는 PaddleOCR 서버를 썼는데 별도 가상환경에 메모리도 5기가를 먹고, 한 장에 9.8초, 표 구조 분석은 17.5초나 걸렸습니다. 더 가벼운 파이썬 모델을 찾는 대신 맥에 이미 들어 있는 글자 인식을 Swift로 감싸서 실행 파일 하나로 만들었습니다. 이를 통해 기존 9.8초에서 0.6초로 열여섯 배 지연 시간을 줄였습니다. 문서 구조, 정밀, 빠른 세 경로로 나눈 건 각 경로마다 장단점이 달라서인데, 언어 교정을 켜면 숫자를 단어로 바꿔 버리는 경우가 있어서 끈 모드를 같이 돌려 값을 보정하였습니다. 병합할 때 빈 칸은 채우지 않고, 숫자는 자릿수가 같을 때만 바꿨으며, 소숫점 누락이 의심되는 경우를 정의해 복원하였습니다.</p>
+</section>
+
+<!-- 15 MLX 재구현 ────────────────────────────────────────── -->
+<section class="slide" data-steps="2" data-title="MLX 재구현">
+  <div class="head">
+    <div class="no"><b>03</b> &nbsp; 16GB 맥북 안에서 구동</div>
+    <h1>추론 스택을 애플 실리콘용으로 다시 구현</h1>
+    <div class="sub">전처리와 이미지 인코더, 커넥터, 언어 모델 전부. 기존 PyTorch 경로는 지우지 않고 환경변수로 토글</div>
+  </div>
+  <div class="cols c2u">
+    <div>
+      <table>
+        <tr><th>지표</th><th class="r">PyTorch</th><th class="r">MLX</th><th class="r">변화</th></tr>
+        <tr><td>첫 로딩</td><td class="r">12.592초</td><td class="r">2.715초</td><td class="r">78.4% 단축</td></tr>
+        <tr><td>첫 토큰까지 TTFT</td><td class="r">4.033초</td><td class="r">2.505초</td><td class="r">37.9% 단축</td></tr>
+        <tr><td>응답 완료까지</td><td class="r">5.789초</td><td class="r">3.533초</td><td class="r">39.0% 단축</td></tr>
+        <tr><td>생성 속도</td><td class="r">8.53 토큰/초</td><td class="r">14.61 토큰/초</td><td class="r">71.4% 향상</td></tr>
+        <tr><td>스왑 발생량</td><td class="r">1,045.9MiB</td><td class="r">9.4MiB</td><td class="r">거의 소멸</td></tr>
+        <tr class="hl"><td>긴 문맥 최대 메모리</td><td class="r">17.03GB</td><td class="r">2.69GB</td><td class="r">스왑 해소</td></tr>
+      </table>
+    </div>
+    <div class="vrule stack">
+      <div class="step" data-s="1">
+        <h3>빨라지기만 하면 의미 없음</h3>
+        <ul class="tight">
+          <li>백엔드만 바꿔 <b>243문항 재실행</b></li>
+          <li>답이 다른 것 <b>6건</b></li>
+          <li>문항당 8.7초에서 4.1초</li>
+          <li><b class="mark">정확도 확인 후 기본값 전환</b></li>
+        </ul>
+      </div>
+      <div class="step" data-s="2">
+        <div class="rule"></div>
+        <h3 style="margin-top:20px">채택하지 않은 양자화</h3>
+        <table class="s">
+          <tr><td style="width:22%">4비트</td><td>출력 한글 비율 0.91에서 <b class="bad">0.07로 붕괴</b></td></tr>
+          <tr><td>8비트</td><td>디코딩은 최속이나 라우터 TTFT <b class="bad">약 70% 저하</b></td></tr>
+        </table>
+        <p class="tiny" style="margin-top:12px">한국어 챗봇에 4비트는 쓸 수 없고, 최대 8토큰만 만드는 라우터에는 8비트가 손해입니다.</p>
+      </div>
+    </div>
+  </div>
+  <p class="note" hidden>추론 스택도 문제였습니다. PyTorch로 돌리면 긴 문맥에서 메모리가 17기가까지 올라가서 16기가 기기에서 필연적으로 스왑이 났습니다. 전처리부터 인코더, 커넥터, 언어 모델까지 전부 MLX로 다시 구현하고 환경변수로 바꿀 수 있게 했습니다. 그 결과, 첫 로딩이 78% 줄고 생성 속도가 71% 빨라졌고, 최대 메모리는 2.69기가로 내려갔습니다. 빨라지기만 하면 의미가 없어서 243개의 질문을 추론 스택만 바꿔 답이 다른 게 여섯 건뿐인 걸 확인하고 기본값을 바꿨습니다. 또한, 양자화도 고려하였지만 4비트에서 답변 품질이 붕괴되고 8비트에서는 오히려 역양자화 비용으로 첫 토큰의 생성 시간이 70%나 느려져 채택하지 않았습니다.</p>
+</section>
+
+<!-- 16 어댑터 토글 ───────────────────────────────────────── -->
+<section class="slide" data-steps="1" data-title="어댑터 토글">
+  <div class="head">
+    <div class="no"><b>03</b> &nbsp; 16GB 맥북 안에서 구동</div>
+    <h1>언어 모델 하나를 이미지용과 텍스트용으로 나눠 쓴다</h1>
+  </div>
+  <div class="cols c2">
+    <div class="stack">
+      <div>
+        <h3>문제</h3>
+        <ul class="tight">
+          <li>텍스트 질문에는 잘 학습된 언어 모델이 필요</li>
+          <li>따로 올리면 1.2B 가중치를 추가로 상주</li>
+          <li>16GB 기기에 그 자리가 없음</li>
+        </ul>
+      </div>
+      <div class="step" data-s="1">
+        <h3>해결</h3>
+        <ul class="tight">
+          <li>LoRA 어댑터를 <b>켜면 이미지용 KLaVA, 끄면 텍스트용 LM</b></li>
+          <li>쓰던 라이브러리에 <b class="bad">끄는 기능이 없음.</b> 한 번 붙이면 되돌릴 수 없는 구조</li>
+          <li>원본 Linear 객체를 보관했다가 되돌려 끼우도록 직접 구현</li>
+          <li>가중치를 복사하지 않아 <b class="mark">요청마다 전환 가능</b></li>
+        </ul>
+      </div>
+    </div>
+    <div class="vrule step" data-s="1">
+      <h3>구동에 필요한 메모리</h3>
+      <table class="s">
+        <tr><td>모델 가중치 bf16</td><td class="r">3.39GB</td></tr>
+        <tr><td class="tiny" style="padding-left:16px">언어 모델</td><td class="r tiny">2.61GB</td></tr>
+        <tr><td class="tiny" style="padding-left:16px">이미지 인코더</td><td class="r tiny">0.77GB</td></tr>
+        <tr><td class="tiny" style="padding-left:16px">커넥터</td><td class="r tiny">0.01GB</td></tr>
+        <tr><td>이미지 질문 최대, MLX</td><td class="r">약 5.3GB</td></tr>
+        <tr><td>이미지 질문 최대, PyTorch</td><td class="r">9.72GB</td></tr>
+        <tr><td>글자 인식</td><td class="r">상주 없음</td></tr>
+        <tr><td>텍스트용 별도 LM</td><td class="r mark">불필요</td></tr>
+      </table>
+      <p class="tiny" style="margin-top:12px">PyTorch 경로에서는 시각 토큰 784개의 prefill 활성값이 약 6.3GB를 차지합니다.</p>
+    </div>
+  </div>
+  <p class="note" hidden>텍스트 질문용 언어 모델을 따로 올릴 메모리 여유는 없었습니다. 그래서 언어 모델을 한 벌만 올려두고 LoRA 어댑터를 켜면 이미지용, 끄면 텍스트용으로 사용했습니다. 그런데 기존 라이브러리에 어댑터를 끄는 기능이 없었습니다. 따라서 원본 Linear 객체를 들고 있다가 되돌려 끼우는 스위치를 구현하였습니다.</p>
+</section>
+
+<!-- 17 서빙 ──────────────────────────────────────────────── -->
+<section class="slide" data-steps="3" data-title="서빙">
+  <div class="head">
+    <div class="no"><b>04</b> &nbsp; 서빙과 API 설계</div>
+    <h1>계약을 먼저 고정하여 시작</h1>
+    <div class="sub">SSE는 첫 바이트가 나간 뒤에 상태 코드를 바꿀 수 없습니다</div>
+  </div>
+  <div class="cols c3">
+    <div>
+      <h3>스트리밍 계약</h3>
+      <p style="margin-bottom:12px"><span class="tag">progress</span><span class="tag">delta</span><span class="tag">done</span><span class="tag">error</span></p>
+      <ul class="tight">
+        <li><b>완료는 정확히 한 번</b>, 항상 마지막</li>
+        <li>시작 후 오류는 상태 코드 대신 이벤트로</li>
+        <li>최종 답변은 조각의 합이 아니라 <b>그래프 상태에서 추출</b>
+          <span class="t">조각이 유실돼도 턴이 끝나면 화면이 스스로 교정</span></li>
+        <li>진행 알림에는 사람이 읽을 한 줄만. 내부 상태는 비노출</li>
+      </ul>
+    </div>
+    <div class="step" data-s="1">
+      <h3>스트리밍에서 실제로 겪은 문제</h3>
+      <table class="s">
+        <tr><td style="width:38%">반쪽 태그 노출</td><td>태그로 이어질 수 있는 꼬리 길이만큼 보류. 앞 공백도 함께</td></tr>
+        <tr><td>사고 과정 노출</td><td>종료 태그까지 전량 보류</td></tr>
+        <tr><td>도구 호출 JSON 파손</td><td>실패를 세어 두고 전부 실패면 재시도 문구를 본문에 부착</td></tr>
+        <tr><td>추론만 하다 예산 소진</td><td>서버가 종료 사유를 함께 반환, 어댑터가 안내 문구로 번역</td></tr>
+      </table>
+    </div>
+    <div class="step" data-s="2">
+      <h3>세션과 동시성</h3>
+      <ul class="tight">
+        <li>확정 상태를 깊은 복사해 작업, <b>정상 종료 시에만 커밋</b></li>
+        <li>처리 중 세션의 재요청은 대기 없이 <b class="mark">409</b>
+          <span class="t">줄 세우면 같은 질문이 두 번 실행됨</span></li>
+        <li>동일 <code>request_id</code>는 잠금 이전에 캐시로 응답</li>
+        <li>추론 서버는 <b>단일 워커와 큐.</b> 종료 신호는 <code>finally</code>로 보장</li>
+      </ul>
+    </div>
+  </div>
+  <div class="step" data-s="3" style="margin-top:28px;border-top:1px solid var(--rule);padding-top:22px">
+    <div class="cols c2">
+      <div><h3>자체 서버를 LangGraph 도구 호출 루프에 연결</h3>
+        <p class="small">OpenAI 호환이 아닌 자체 스키마, 도구 호출은 본문 태그.
+          <code>BaseChatModel</code> 어댑터로 스키마와 호출 id, 스트리밍 형식을 맞췄습니다.
+          조각은 문자열이 아니라 <b>청크 객체끼리 더합니다.</b> 문자열로 합치면 도구 호출이 조용히 사라집니다.</p></div>
+      <div><h3>교체 가능한 백엔드</h3>
+        <p class="small">추론 백엔드를 환경변수로 교체합니다. 지연 import로 의존성을 분리해
+          MLX로 돌 때 <b class="mark">PyTorch 계열 377MB가 서버 프로세스에 상주하지 않습니다.</b></p></div>
+    </div>
+  </div>
+  <p class="note" hidden>마지막은 서빙입니다. SSE는 첫 바이트가 나간 다음에는 상태 코드를 못 바꿀 수 없습니다. 그래서 계약부터 고정했습니다. 이벤트를 네 종류로 두고, 완료는 정확히 한 번만, 항상 마지막에 나가게 했습니다. 최종 답변은 조각을 이어 붙인 게 아니라 그래프 상태에서 따로 꺼내서, 조각이 유실되거나 도구 호출 태그가 새어 나가도 턴이 끝나면 화면이 스스로 교정되게 하였습니다. 실제로 태그가 반쪽만 화면에 보이는 문제가 있었는데, 다음 청크에서 태그로 이어질 수 있는 부분만큼 보류해 해결할 수 있었습니다. 세션은 트랜잭션처럼 다뤘습니다. 깊은 복사로 작업하고 정상 종료했을 때만 커밋하고, 전송을 두 번 누르면 기다리지 않고 409 상태 코드로 거절하게 하였습니다. 추론 백엔드는 환경변수로 갈아끼우는데, MLX로 돌 때 PyTorch의 메모리 사용이 아예 없게 분리하였습니다.</p>
+</section>
+
+<!-- 18 정리 ──────────────────────────────────────────────── -->
+<section class="slide" data-steps="1" data-title="정리">
+  <div class="head">
+    <div class="no">정리</div>
+    <h1>실측을 통해 선정하고, 원인을 파악해 해결하고, 확인한 뒤에 바꿨습니다</h1>
+  </div>
+  <div class="cols c2u">
+    <div>
+      <table class="s">
+        <tr><th>영역</th><th>기술</th><th>한 일</th></tr>
+        <tr><td class="nw">VLM 학습</td><td>PyTorch, transformers, PEFT, accelerate</td><td>2단계 레시피 설계, 위치 인코딩과 분산 학습 문제 해결</td></tr>
+        <tr><td class="nw">데이터 설계</td><td>데이터 파이프라인, 합성 데이터</td><td>230만 행을 비율에 맞춰 구축, 부족한 능력은 직접 생성</td></tr>
+        <tr><td class="nw">원인 분석</td><td>통제 실험 설계</td><td>실패를 해상도 부족과 취합 실패로 분리</td></tr>
+        <tr><td class="nw">에이전트</td><td>LangGraph, LangChain</td><td>경로 분기 그래프, 자체 서버를 도구 호출 루프에 연결</td></tr>
+        <tr><td class="nw">온디바이스</td><td>MLX, Apple Silicon</td><td>추론 스택 재구현, 정확도 확인 후 기본값 전환</td></tr>
+        <tr><td class="nw">네이티브 연동</td><td>Swift, Apple Vision</td><td>OCR 서버를 단일 실행 파일로 대체, 병합 규칙 설계</td></tr>
+        <tr><td class="nw">API와 동시성</td><td>FastAPI, Pydantic, SSE, 워커와 큐</td><td>스트리밍 계약 고정, 세션 트랜잭션, 백엔드 추상화</td></tr>
+      </table>
+    </div>
+    <div class="vrule step" data-s="1">
+      <h3>공개</h3>
+      <p class="small">가중치<br><b>huggingface.co/PangS00oo/EXAONE-KLaVA-1.8B</b></p>
+      <p class="small" style="margin-top:14px">코드<br><b>github.com/kksoo1769/KAVA</b></p>
+      <div class="rule" style="margin:24px 0"></div>
+      <p class="small">벤치마크 원본 기록, 학습 데이터 구성, 토크나이저 비교, 문항별 추론 로그를
+        저장소에 그대로 두었습니다.</p>
+      <p style="margin-top:36px;font-size:26px">감사합니다.</p>
+    </div>
+  </div>
+  <p class="note" hidden>마지막으로 정리하겠습니다. 모델 선정부터 데이터 설계, 학습, 실패 원인 분석, 온디바이스 최적화, 서빙까지 전 과정을 수행했습니다. 특히 안 되는 걸 만났을 때 원인을 실험으로 통해 확인하고, 추론 스택을 고친 다음에는 정확도까지 확인하며 기본값을 바꾸는 방식을 사용했습니다. 가중치는 허깅페이스에, 코드는 깃허브에 공개했습니다. 감사합니다.</p>
+</section>
+
+</div></div>
+
+<div id="bar"></div>
+<div id="hud">
+  <span id="pos">1 / 18</span>
+  <span id="ttl"></span>
+  <span class="grow"></span>
+  <span>? 도움말</span>
+</div>
+<div id="notes"></div>
+<div id="help"><div>
+  <kbd>오른쪽 화살표</kbd> <kbd>Space</kbd> 다음 단계<br>
+  <kbd>왼쪽 화살표</kbd> 이전 단계<br>
+  <kbd>Shift</kbd> 와 <kbd>화살표</kbd> 슬라이드 통째로 이동<br>
+  <kbd>N</kbd> 대본 보기<br>
+  <kbd>H</kbd> 아래 표시줄 숨기기<br>
+  <kbd>F</kbd> 전체 화면<br>
+  <kbd>?</kbd> 이 도움말 닫기
+</div></div>
+
+<script>
+(function(){
+  var slides = [].slice.call(document.querySelectorAll('.slide'));
+  var stage = document.getElementById('stage');
+  var i = 0, s = 0;
+
+  // 캔버스를 뷰포트에 맞춰 축소한다. 확대는 하지 않는다.
+  function fit(){
+    var k = Math.min(innerWidth/1600, innerHeight/900);
+    stage.style.transform = 'translate(-50%,-50%) scale(' + k + ')';
+  }
+  addEventListener('resize', fit); fit();
+
+  function steps(n){ return parseInt(slides[n].dataset.steps || '0', 10); }
+
+  function render(){
+    slides.forEach(function(el, n){ el.classList.toggle('active', n === i); });
+    [].slice.call(slides[i].querySelectorAll('.step')).forEach(function(el){
+      el.classList.toggle('on', parseInt(el.dataset.s, 10) <= s);
+    });
+    document.getElementById('pos').textContent = (i+1) + ' / ' + slides.length;
+    document.getElementById('ttl').textContent = slides[i].dataset.title || '';
+    document.getElementById('bar').style.width = ((i+1)/slides.length*100) + '%';
+    var note = slides[i].querySelector('.note');
+    document.getElementById('notes').textContent = note ? note.textContent.trim() : '';
+    location.hash = (i+1) + '.' + s;
+  }
+
+  function go(di, ds){
+    if (ds > 0){
+      if (s < steps(i)) { s++; return render(); }
+      if (i < slides.length-1){ i++; s = 0; return render(); }
+      return;
+    }
+    if (ds < 0){
+      if (s > 0){ s--; return render(); }
+      if (i > 0){ i--; s = steps(i); return render(); }
+      return;
+    }
+    var t = i + di;
+    if (t < 0 || t >= slides.length) return;
+    i = t; s = 0; render();
+  }
+
+  addEventListener('keydown', function(e){
+    var k = e.key;
+    if (k === 'ArrowRight' || k === ' ' || k === 'PageDown'){ e.preventDefault(); e.shiftKey ? go(1,0) : go(0,1); }
+    else if (k === 'ArrowLeft' || k === 'PageUp'){ e.preventDefault(); e.shiftKey ? go(-1,0) : go(0,-1); }
+    else if (k === 'ArrowDown'){ e.preventDefault(); go(1,0); }
+    else if (k === 'ArrowUp'){ e.preventDefault(); go(-1,0); }
+    else if (k === 'Home'){ i = 0; s = 0; render(); }
+    else if (k === 'End'){ i = slides.length-1; s = steps(i); render(); }
+    else if (k === 'n' || k === 'N'){ document.getElementById('notes').classList.toggle('on'); }
+    else if (k === 'h' || k === 'H'){ document.getElementById('hud').classList.toggle('off'); }
+    else if (k === 'f' || k === 'F'){
+      document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+    }
+    else if (k === '?' || k === '/'){ document.getElementById('help').classList.toggle('on'); }
+    else if (k === 'Escape'){ document.getElementById('help').classList.remove('on'); }
+  });
+
+  // 클릭으로도 넘긴다. 왼쪽 4분의 1은 뒤로.
+  addEventListener('click', function(e){
+    if (e.target.closest('#notes') || e.target.closest('#help')) return;
+    e.clientX < innerWidth/4 ? go(0,-1) : go(0,1);
+  });
+
+  // 녹화 중에는 커서를 숨긴다.
+  var idle;
+  addEventListener('mousemove', function(){
+    document.body.classList.remove('hide-cursor');
+    clearTimeout(idle);
+    idle = setTimeout(function(){ document.body.classList.add('hide-cursor'); }, 2000);
+  });
+
+  var m = /^#(\d+)\.(\d+)$/.exec(location.hash);
+  if (m){ i = Math.min(slides.length-1, Math.max(0, +m[1]-1)); s = Math.min(steps(i), +m[2]); }
+  render();
+})();
+</script>
+</body>
+</html>

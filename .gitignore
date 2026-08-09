@@ -1,0 +1,48 @@
+# 가상 환경 및 환경 설정
+.venv
+services/web/node_modules
+.pnpm-store/
+.env
+.pytest_cache
+.ruff_cache
+
+# OS, 에디터 설정
+__pycache__
+.claude
+.codex
+.DS_Store
+.vscode
+
+
+# 체크포인트, 데이터, wandb, 임시 작업물 무시
+/runs/**/*.pt
+/runs/**/*.safetensors
+/runs/**/mlx/
+/runs/uploads
+wandb
+/data
+aihubshell
+/scratchpad
+/scratchpad2
+/experiments
+/services/vision/vision-ocr
+/mlx_bench
+*.tsbuildinfo
+
+# AI Hub 이미지 제외
+docs/dataset_samples/stage1/ekvqa_71357.jpg
+docs/dataset_samples/stage1/korean_gqa_71711.jpg
+docs/dataset_samples/stage1/kvu_71866.png
+docs/dataset_samples/stage2/korean_gqa_71711.jpg
+docs/dataset_samples/stage2/ekvqa_71357.jpg
+docs/dataset_samples/stage2/ocr_ke_71730.jpg
+docs/dataset_samples/stage2/chart_71706.jpg
+docs/dataset_samples/stage2/table_71709.jpg
+docs/dataset_samples/stage2/vizqa_71812.png
+docs/dataset_samples/stage2/vcot_reasoning.jpg
+docs/vlm_comparison/samples
+docs/reread_crop_images
+
+/analysis
+/reports
+tests

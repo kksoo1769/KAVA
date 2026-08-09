@@ -1,0 +1,79 @@
+[project]
+name = "kava"
+version = "0.1.0"
+description = "Korean & English bilingual hybrid Chatbot Assistant"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    # flash-attn은 CUDA 확장이라 linux x86_64 + CUDA 환경에서만 설치한다.
+    # macOS에서는 attn_implementation이 sdpa로 자동 폴백된다(model_vlm.resolve_attn_implementation).
+    "flash-attn==2.8.3; sys_platform == 'linux'",
+    "numpy==2.4.6",
+    "torch==2.9",
+    "torchvision==0.24.0",
+    "wandb==0.27.2",
+    # VLM(EXAONE 백본) 학습, 추론
+    "transformers==5.11.0",
+    "accelerate==1.14.0",
+    "datasets==5.0.0",
+    "peft==0.19.1",
+    "safetensors==0.8.0",
+    "einops==0.8.2",
+    # 서빙 공통(KLaVA klava_server, KAVA kava_api)
+    # services/agent를 흡수하면서 fastapi, uvicorn, pillow는 agent가 요구하던 하한에 맞춰 올렸다.
+    "pillow==12.3.0",
+    "fastapi==0.141.1",
+    "uvicorn==0.52.1",
+    "pydantic==2.13.4",
+    # KAVA 에이전트(services/agent, kava_api)
+    "langgraph==1.2.7",
+    "langchain-core==1.4.8",
+    "langchain-google-genai==4.2.6",
+    "langchain-openai",
+    "python-dotenv==1.2.2",
+    "requests==2.34.2",
+    "simpleeval==1.0.7",
+    "typing-extensions==4.16.0",
+    "tavily-python>=0.7.26",
+    "python-multipart>=0.0.32",
+    # KLaVA MLX 추론 mlx 백엔드
+    "mlx==0.32.0; sys_platform == 'darwin'",
+    "mlx-lm==0.31.3; sys_platform == 'darwin'",
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+# cu128 인덱스에는 linux x86_64 휠만 있다. macOS(arm64)는 PyPI 기본 휠(MPS 지원 빌드)로 받는다.
+torch = [{index = "pytorch-cu128", marker = "sys_platform == 'linux'"}]
+torchvision = [{index = "pytorch-cu128", marker = "sys_platform == 'linux'"}]
+# flash-attn을 PyPI sdist 대신 프리빌트 휠로 고정: 새 머신에서 torch 없이 빌드가 시작돼 실패하는 문제 방지
+flash-attn = [{url = "https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl", marker = "sys_platform == 'linux'"}]
+
+[tool.uv]
+no-build-isolation-package = ["flash-attn"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "httpx2>=2.9.1",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests", "services/agent/tests"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/kava", "services/agent/kava_api"]
+
+[tool.ruff]
+src = ["src", "services/agent", "services/agent/tests"]
