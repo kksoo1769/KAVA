@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import argparse
 import glob as _glob
-import json
 import os
 
 import torch
 from safetensors.torch import load_file
+from kava.ckpt import load_meta
 from kava.device import resolve_device
 from kava.model_vlm import build_vlm, IMAGE_TOKEN_INDEX
 from kava.vision.siglip2 import Siglip2Config, build_siglip2_processor, siglip2_preprocess
@@ -21,33 +21,19 @@ def load_vlm_for_inference(ckpt_dir: str, device=None, dtype=torch.bfloat16, ver
     device=None이면 cuda: mps: cpu 순으로 자동 선택한다(KLAVA_DEVICE로 override).
     """
     device = resolve_device(device)
-    meta = json.load(open(os.path.join(ckpt_dir, "meta.json")))
-    backbone = meta.get("vision_backbone", "siglip2")
-    if backbone != "siglip2":
-        raise ValueError(
-            f"이 체크포인트의 vision_backbone은 {backbone!r}입니다. AxisMF 백본은 CUDA 전용 "
-            "mamba-ssm 커널에 의존해 제거했으므로 siglip2 체크포인트만 로드할 수 있습니다."
-        )
+    meta = load_meta(ckpt_dir)
     has_adapter = bool(meta.get("lora")) and os.path.isdir(os.path.join(ckpt_dir, "adapter"))
     ft_vision = os.path.exists(os.path.join(ckpt_dir, "vision_encoder.safetensors"))
 
-    # KLAVA_LM_ID가 있으면 언어 모델 가중치만 바꾼다
-    base_id = meta.get("exaone_id", "LGAI-EXAONE/EXAONE-4.0-1.2B")
-    lm_id = os.environ.get("KLAVA_LM_ID", "").strip() or base_id
-    lm = None
-    if lm_id != base_id:
-        from kava.quant import load_quantized_lm
-        lm = load_quantized_lm(lm_id, dtype=dtype, device=device, attn_implementation="sdpa",
-                               verbose=verbose)
+    base_id = meta["exaone_id"]
 
     # SigLIP-2 NaFlex: HF 사전학습 로드(미세조정본 있으면 아래서 덮어씀).
     vlm = build_vlm(
         exaone_id=base_id,
-        lm=lm,
         vision_backbone="siglip2",
         siglip_cfg=Siglip2Config(
-            model_id=meta.get("siglip_model_id", "google/siglip2-so400m-patch16-naflex"),
-            max_num_patches=int(meta.get("siglip_num_patches", 784))),
+            model_id=meta["siglip_model_id"],
+            max_num_patches=int(meta["siglip_num_patches"])),
         lm_master_dtype=dtype, vis_master_dtype=dtype, con_master_dtype=dtype,
         device=device, attn_implementation="sdpa", verbose=verbose,
     )
@@ -68,9 +54,9 @@ def load_vlm_for_inference(ckpt_dir: str, device=None, dtype=torch.bfloat16, ver
         vlm.language_model.load_state_dict({k: v for k, v in lm.items()}, strict=True)
     vlm.eval()
     if verbose:
-        print(f"[infer] ckpt={ckpt_dir} backbone={backbone} device={device} "
-              f"seq_len={meta.get('siglip_num_patches', 576)} "
-              f"adapter={has_adapter} ft_vision={ft_vision} lm={lm_id}", flush=True)
+        print(f"[infer] ckpt={ckpt_dir} backbone={meta['vision_backbone']} device={device} "
+              f"seq_len={meta['siglip_num_patches']} "
+              f"adapter={has_adapter} ft_vision={ft_vision}", flush=True)
     return vlm, meta
 
 
@@ -237,8 +223,8 @@ def main():
     tokenizer = load_tokenizer()
     vlm, meta = load_vlm_for_inference(args.ckpt, device=device) # 모델은 1회만 로드
     siglip_proc = build_siglip2_processor(
-        meta.get("siglip_model_id", "google/siglip2-so400m-patch16-naflex"),
-        max_num_patches=int(meta.get("siglip_num_patches", 576)))
+        meta["siglip_model_id"],
+        max_num_patches=int(meta["siglip_num_patches"]))
     print(f"\n[batch] {len(images)}개 이미지 순차 처리 (device={device}, prompt='{args.prompt}')\n" + "=" * 60)
     for i, img in enumerate(images, 1):
         try:

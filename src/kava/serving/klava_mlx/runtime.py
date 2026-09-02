@@ -31,12 +31,10 @@ __all__ = ["MLXSharedRuntime", "MLXRuntimeConfig", "Job", "RESIZE_BACKEND", "MLX
 # 전처리 백엔드는 상수다. 환경변수로 바꿀 수 없다(모듈 docstring 참고).
 RESIZE_BACKEND = "numpy_aa"
 
-# KLAVA_MLX_QUANT 값: <ckpt_dir>/mlx/ 아래 기본 디렉터리 이름
-_QUANT_DIRS = {
-    "bf16": "exaone4-1.2b-bf16",
-    "8bit": "exaone4-1.2b-8bit",
-    "4bit": "exaone4-1.2b-4bit",
-}
+# <ckpt_dir>/mlx/ 아래 모델 디렉터리 이름
+# 양자화 변환본은 쓰지 않는다. 4bit는 한국어 품질이 무너지고(실측 한글 문자 비율 0.91 -> 0.07)
+# 8bit는 VLM prefill(TTFT)이 torch 대비 느려 이득이 없다. bf16 하나만 지원한다.
+_MODEL_DIR_NAME = "exaone4-1.2b-bf16"
 
 # torch 판이 lm.generate(top_p=0.95) 로 쓰는 값. do_sample 일 때만 적용된다.
 TOP_P = 0.95
@@ -50,7 +48,6 @@ class MLXRuntimeConfig:
     ckpt_dir: str
     model_dir: str
     adapter_dir: str
-    quant: str = "bf16"
     prefill_step_size: int = 2048
 
     @staticmethod
@@ -62,30 +59,9 @@ class MLXRuntimeConfig:
     def from_env(cls, ckpt_dir: str | os.PathLike | None = None) -> "MLXRuntimeConfig":
         ckpt = str(ckpt_dir) if ckpt_dir is not None else default_ckpt_dir()
 
-        quant = (os.environ.get("KLAVA_MLX_QUANT") or "bf16").strip().lower()
-        if quant not in _QUANT_DIRS:
-            raise ValueError(
-                f"KLAVA_MLX_QUANT={quant!r} 는 모르는 값이다. "
-                f"허용: {sorted(_QUANT_DIRS)} (기본 bf16)."
-            )
-        if quant == "4bit" and os.environ.get("KLAVA_MLX_ALLOW_4BIT") != "1":
-            raise ValueError(
-                "KLAVA_MLX_QUANT=4bit 는 지원 옵션이 아니다. 4bit 변환본은 한국어를 "
-                "사실상 포기한다(실측 한글 문자 비율 0.91: 0.07). 그래도 실험하려면 "
-                "KLAVA_MLX_ALLOW_4BIT=1 을 함께 지정해야 한다."
-            )
-        if quant == "8bit":
-            print(
-                "[MLXSharedRuntime] 경고: KLAVA_MLX_QUANT=8bit 는 디코드는 가장 빠르지만 "
-                "VLM prefill(TTFT)이 torch 대비 60~75% 느리다. 라우터 노드는 "
-                "max_new_tokens=8 로 VLM 을 호출하므로 사실상 TTFT 만 본다. "
-                "기본값(bf16)에서 벗어난 설정임을 인지하고 쓰는 것인지 확인하라.",
-                flush=True,
-            )
-
         # 명시하지 않은 경로는 체크포인트 디렉터리에서 만든다
         root = mlx_root(ckpt)
-        model_dir = os.environ.get("KLAVA_MLX_MODEL_DIR") or str(root / _QUANT_DIRS[quant])
+        model_dir = os.environ.get("KLAVA_MLX_MODEL_DIR") or str(root / _MODEL_DIR_NAME)
         adapter_dir = os.environ.get("KLAVA_MLX_ADAPTER_DIR") or str(root / "lora-mlx")
 
         raw_prefill = os.environ.get("KLAVA_MLX_PREFILL_STEP")
@@ -97,7 +73,6 @@ class MLXRuntimeConfig:
             ckpt_dir=ckpt,
             model_dir=model_dir,
             adapter_dir=adapter_dir,
-            quant=quant,
             prefill_step_size=prefill,
         )
 
@@ -123,8 +98,8 @@ class MLXRuntimeConfig:
                 "MLX 런타임 아티팩트가 없어서 서버를 띄울 수 없다.\n\n"
                 "없는 것:\n  " + "\n  ".join(missing) + "\n\n"
                 "고치는 법: 아래 변환을 1회 실행한다(원본 체크포인트는 건드리지 않는다):\n"
-                f"  {py} -m kava.serving.klava_mlx.convert convert-base --bits none --dry-run\n"
-                f"  {py} -m kava.serving.klava_mlx.convert convert-base --bits none\n"
+                f"  {py} -m kava.serving.klava_mlx.convert convert-base --dry-run\n"
+                f"  {py} -m kava.serving.klava_mlx.convert convert-base\n"
                 f"  {py} -m kava.serving.klava_mlx.convert convert-lora\n"
                 f"  {py} -m kava.serving.klava_mlx.convert verify\n\n"
                 "당장 서버가 떠야 한다면 torch 백엔드로 우회한다:\n"
@@ -184,7 +159,7 @@ class MLXSharedRuntime:
         # MLX 전처리는 체크포인트 메타데이터의 비전 패치 수를 사용한다
         self.processor = None
         self.max_num_patches = self.vlm.max_num_patches
-        self.lm_id = self.meta.get("exaone_id", "LGAI-EXAONE/EXAONE-4.0-1.2B")
+        self.lm_id = self.meta["exaone_id"]
 
         # 두 백엔드가 같은 지점에서 생성을 끝내는지 확인한다
         self.eos_check = self._check_eos()
@@ -471,7 +446,6 @@ class MLXSharedRuntime:
             "ckpt_dir": self.config.ckpt_dir,
             "model_dir": self.config.model_dir,
             "adapter_dir": self.config.adapter_dir,
-            "quant": self.config.quant,
             "prefill_step_size": self.config.prefill_step_size,
             "resize_backend": RESIZE_BACKEND,
             "lm_id": self.lm_id,

@@ -166,13 +166,9 @@ def snapshot_weight_bytes(snapshot: Path) -> int:
     return total
 
 
-def estimate_output_bytes(src_weight_bytes: int, bits: Optional[int], group_size: int) -> int:
-    """가중치 수와 양자화 설정으로 출력 크기를 추정."""
-    n_params = max(0, src_weight_bytes // 2)
-    if bits is None:
-        return src_weight_bytes
-    bytes_per_param = bits / 8.0 + 4.0 / max(1, group_size)
-    return int(n_params * bytes_per_param * 1.15)
+def estimate_output_bytes(src_weight_bytes: int) -> int:
+    """출력 크기 추정. bf16 변환은 dtype이 그대로라 원본 가중치 크기와 같다."""
+    return src_weight_bytes
 
 
 def disk_guard(
@@ -291,15 +287,13 @@ def verify_tokenizer(model_dir: Path) -> list[str]:
 
 
 # convert-base
-def out_dir_for_bits(bits: Optional[int], ckpt: str | os.PathLike | None = None) -> Path:
-    """<ckpt>/mlx/exaone4-1.2b-<tag>. 이름은 runtime._QUANT_DIRS 와 맞아야 한다."""
-    tag = "bf16" if bits is None else f"{bits}bit"
-    return mlx_root(ckpt) / f"exaone4-1.2b-{tag}"
+def out_dir_for_base(ckpt: str | os.PathLike | None = None) -> Path:
+    """<ckpt>/mlx/exaone4-1.2b-bf16. 이름은 runtime._MODEL_DIR_NAME 과 맞아야 한다."""
+    return mlx_root(ckpt) / "exaone4-1.2b-bf16"
 
 
 def cmd_convert_base(args) -> int:
-    bits = None if args.bits == "none" else int(args.bits)
-    _hr(f"convert-base: bits={args.bits}" + ("  [DRY RUN]" if args.dry_run else ""))
+    _hr("convert-base: bf16" + ("  [DRY RUN]" if args.dry_run else ""))
 
     ckpt = Path(args.ckpt).expanduser()
     model_id, id_src = resolve_model_id(ckpt)
@@ -333,7 +327,7 @@ def cmd_convert_base(args) -> int:
             size = f"{p.resolve().stat().st_size:>12,} B" if p.is_file() else " " * 14
             print(f"  {mark} {name:26s}{size}")
 
-    out_dir = Path(args.out).expanduser() if args.out else out_dir_for_bits(bits, ckpt)
+    out_dir = Path(args.out).expanduser() if args.out else out_dir_for_base(ckpt)
     print(f"\n출력 경로      : {out_dir}")
     if out_dir.exists():
         print(
@@ -341,8 +335,8 @@ def cmd_convert_base(args) -> int:
             "        지우고 다시 만들거나 --out 으로 다른 경로를 주어야 한다."
         )
 
-    projected = estimate_output_bytes(src_weight_bytes, bits, args.group_size)
-    label = "bf16" if bits is None else f"{bits}bit/g{args.group_size}/{args.q_mode}"
+    projected = estimate_output_bytes(src_weight_bytes)
+    label = "bf16"
     print("\n디스크 가드")
     ok, report = disk_guard(out_dir, projected, args.min_free_gb, label=label)
     print(report)
@@ -351,12 +345,8 @@ def cmd_convert_base(args) -> int:
     conv_kwargs: dict[str, Any] = {
         "hf_path": source,
         "mlx_path": str(out_dir),
-        "quantize": bits is not None,
-        "q_bits": bits,
-        "q_group_size": args.group_size if bits is not None else None,
-        "q_mode": args.q_mode,
+        "quantize": False,
         "dtype": args.dtype,
-        "quant_predicate": args.quant_predicate,
     }
     for k, v in conv_kwargs.items():
         print(f"  {k:16s} = {v!r}")
@@ -364,7 +354,7 @@ def cmd_convert_base(args) -> int:
     if args.dry_run:
         print("\nDRY RUN: 여기서 멈춘다. 가중치는 읽지도 쓰지도 않았다.")
         print("다음 단계 (실제 변환):")
-        print(f"  python -m kava.serving.klava_mlx.convert convert-base --bits {args.bits}")
+        print("  python -m kava.serving.klava_mlx.convert convert-base")
         # dry-run은 거부 판정을 출력해도 성공으로 끝낸다
         return 0
 
@@ -669,7 +659,7 @@ def cmd_convert_lora(args) -> int:
 def cmd_verify(args) -> int:
     ckpt = Path(args.ckpt).expanduser()
     # --model 을 안 주면 서버 기본값(bf16)을 검증한다. 서버가 실제로 읽는 그 경로다.
-    model_dir = Path(args.model).expanduser() if args.model else out_dir_for_bits(None, ckpt)
+    model_dir = Path(args.model).expanduser() if args.model else out_dir_for_base(ckpt)
     if not model_dir.is_absolute():
         model_dir = (REPO_ROOT / model_dir).resolve()
 
@@ -777,7 +767,7 @@ def build_parser() -> argparse.ArgumentParser:
             f"현재 기본 ckpt : {DEFAULT_CKPT}\n"
             f"현재 기본 출력 : {mlx_root(DEFAULT_CKPT)}\n\n"
             "예:\n"
-            "  python -m kava.serving.klava_mlx.convert convert-base --bits none --dry-run\n"
+            "  python -m kava.serving.klava_mlx.convert convert-base --dry-run\n"
         ),
         epilog=(
             "모든 서브커맨드에 --dry-run 이 있다. 디스크가 빠듯하므로(여유 15 GB 안팎)\n"
@@ -797,27 +787,17 @@ def build_parser() -> argparse.ArgumentParser:
     # 베이스 모델 검증
     cb = _common(sub.add_parser(
         "convert-base",
-        help="베이스 EXAONE 을 MLX 포맷으로 변환 (선택적으로 양자화)",
+        help="베이스 EXAONE 을 MLX bf16 포맷으로 변환",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        description="베이스 EXAONE 을 <ckpt>/mlx/exaone4-1.2b-{bf16,8bit,6bit,4bit}/ 로 변환한다.",
+        description="베이스 EXAONE 을 <ckpt>/mlx/exaone4-1.2b-bf16/ 로 변환한다.",
     ))
-    cb.add_argument("--bits", choices=["none", "8", "6", "4"], default="none",
-                    help="none=bf16 비양자화(기본). 8, 6, 4는 affine 양자화 비트 수. "
-                         "mlx_lm은 2와 3도 받지만 1.2B 모델에서 품질이 낮아 제외했다.")
-    cb.add_argument("--group-size", type=int, default=64,
-                    help="양자화 그룹 크기 (mlx_lm 기본 64). 작을수록 정확하고 파일이 커진다.")
-    cb.add_argument("--q-mode", choices=["affine", "mxfp4", "nvfp4", "mxfp8"], default="affine",
-                    help="양자화 방식. 기본 affine. mxfp*와 nvfp*는 quant-predicate와 함께 못 쓴다.")
-    cb.add_argument("--quant-predicate",
-                    choices=["mixed_2_6", "mixed_3_4", "mixed_3_6", "mixed_4_6"], default=None,
-                    help="레이어별 혼합 비트 정책 (affine 에서만 동작).")
     cb.add_argument("--dtype", choices=["float16", "bfloat16", "float32"], default="bfloat16",
-                    help="비양자화 가중치 dtype. 기본 bfloat16: torch 베이스라인이 bfloat16 이라 맞춘 것.")
+                    help="가중치 dtype. 기본 bfloat16: torch 베이스라인이 bfloat16 이라 맞춘 것.")
     cb.add_argument("--ckpt", default=str(DEFAULT_CKPT),
                     help="meta.json 에서 exaone_id 를 읽고, 출력 경로도 여기서 파생시킨다. "
                          "기본값은 KLAVA_CKPT 또는 저장소 기본 체크포인트.")
     cb.add_argument("--out", default=None,
-                    help="출력 경로 (기본: <ckpt>/mlx/exaone4-1.2b-<tag>)")
+                    help="출력 경로 (기본: <ckpt>/mlx/exaone4-1.2b-bf16)")
     cb.add_argument("--allow-download", action="store_true",
                     help="로컬 스냅샷이 없을 때 허브에서 받는 것을 허용한다. 기본은 거부다"
                          "(2.4 GiB 를 다시 받을 여유가 없다).")

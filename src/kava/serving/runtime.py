@@ -34,7 +34,8 @@ class SharedRuntime:
         device = resolve_device(device)
         self.tokenizer = load_tokenizer()
         self.vlm, self.meta = load_vlm_for_inference(ckpt_dir, device=device, dtype=torch.bfloat16, verbose=False)
-        self.processor = build_siglip2_processor(self.meta.get("siglip_model_id", "google/siglip2-so400m-patch16-naflex"), int(self.meta.get("siglip_num_patches", 784)))
+        self.processor = build_siglip2_processor(
+            self.meta["siglip_model_id"], int(self.meta["siglip_num_patches"]))
         self.device = device
 
         self.queue = queue.Queue(maxsize=8)

@@ -20,7 +20,7 @@ class VLMConfig:
 
     # SigLIP2 NaFlex 전용
     siglip_model_id: str = "google/siglip2-so400m-patch16-naflex"
-    siglip_num_patches: int = 576 # 시각 토큰 시퀀스 최대 길이
+    siglip_num_patches: int = 784 # 시각 토큰 시퀀스 최대 길이(운영 체크포인트 기준)
 
     attn_implementation: str = "flash_attention_2" # 'sdpa' | 'flash_attention_2' (LM용)
     projector_init: str = "" # stage 1 projector.safetensors 경로(미설정: 랜덤)
@@ -35,7 +35,6 @@ class VLMConfig:
     # vision encoder
     train_vision: bool = False # instruct에서 unfreeze 여부
     vision_lr: float = 2e-6 # vision encoder lr
-    vision_bn_mode: str = "freeze" # Stem에서의 BatchNorm의 running stats 보존
 
     # data
     data_manifest: str = os.path.join("data", "vlm", "align_stage1.train.jsonl")

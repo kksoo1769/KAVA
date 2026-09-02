@@ -14,6 +14,7 @@ import mlx.nn as nn
 import numpy as np
 from mlx.utils import tree_flatten, tree_unflatten
 
+from kava.ckpt import load_meta
 from .preprocess import preprocess_image
 from .vision import (
     Siglip2VisionConfig,
@@ -370,7 +371,7 @@ class KlavaMLXVLM:
         self.vision_config = vision_config
         self.lora = lora
         self.embed_dtype = embed_dtype
-        self.max_num_patches = int(meta.get("siglip_num_patches", 784))
+        self.max_num_patches = int(meta["siglip_num_patches"])
 
     # -- 이미지 -------------------------------------------------------------------
     def preprocess(self, image_path: str, resize_backend: str = "numpy_aa") -> dict:
@@ -606,7 +607,7 @@ def load_klava_mlx(
 
     lm_dir = Path(lm_dir)
     ckpt_dir = Path(ckpt_dir)
-    meta = json.loads((ckpt_dir / "meta.json").read_text(encoding="utf-8"))
+    meta = load_meta(ckpt_dir)
 
     hf_cfg = None
     if hf_siglip_config:

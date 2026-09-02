@@ -178,7 +178,6 @@ def build_vlm(
     vision_backbone: str = "siglip2",
     siglip_cfg: Siglip2Config | None = None,
     lora_config=None,
-    lm=None,
     lm_master_dtype=torch.float32,
     vis_master_dtype=torch.float32,
     con_master_dtype=torch.float32,
@@ -194,11 +193,10 @@ def build_vlm(
         )
     device = resolve_device(device)
     attn_implementation = resolve_attn_implementation(attn_implementation, device)
-    if lm is None:
-        lm = AutoModelForCausalLM.from_pretrained(
-            exaone_id, torch_dtype=lm_master_dtype, local_files_only=local_files_only,
-            attn_implementation=attn_implementation,
-        )
+    lm = AutoModelForCausalLM.from_pretrained(
+        exaone_id, torch_dtype=lm_master_dtype, local_files_only=local_files_only,
+        attn_implementation=attn_implementation,
+    )
     lm_hidden = lm.config.hidden_size # EXAONE-4.0-1.2B: 2048
     if lora_config is not None:
         from peft import get_peft_model

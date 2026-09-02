@@ -63,7 +63,7 @@ class Siglip2VisionConfig:
                 kwargs[name] = vc[name]
         if meta.get("vision_hidden"):
             kwargs.setdefault("hidden_size", int(meta["vision_hidden"]))
-        kwargs["max_num_patches"] = int(meta.get("siglip_num_patches", 784))
+        kwargs["max_num_patches"] = int(meta["siglip_num_patches"])
         return cls(**kwargs)
 
 
@@ -427,13 +427,13 @@ def _main() -> int:
         description="비전 체크포인트 키 와 MLX 모듈 파라미터 대조 (헤더만 읽는다).",
     )
     ap.add_argument("--weights", required=True, help="vision_encoder.safetensors 경로")
-    ap.add_argument("--meta", default=None, help="체크포인트 meta.json (설정 출처)")
+    ap.add_argument("--meta", required=True, help="체크포인트 meta.json (설정 출처)")
     ap.add_argument("--hf-config", default=None,
                     help="google/siglip2-... 의 config.json (vision_config 출처)")
     ap.add_argument("--show", type=int, default=8, help="샘플로 출력할 매핑 개수")
     args = ap.parse_args()
 
-    meta = json.loads(Path(args.meta).read_text(encoding="utf-8")) if args.meta else {}
+    meta = json.loads(Path(args.meta).read_text(encoding="utf-8"))
     hf_cfg = (
         json.loads(Path(args.hf_config).read_text(encoding="utf-8"))
         if args.hf_config else None

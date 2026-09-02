@@ -24,7 +24,7 @@ export PYTHONPATH="$ROOT/src"
 MULTI=""; [ "$NPROC" -gt 1 ] && MULTI="--multi_gpu"
 
 echo "[vlm_pretrain.sh] stage=align NPROC=$NPROC manifest=$DATA_MANIFEST"
-accelerate launch --num_processes "$NPROC" $MULTI --mixed_precision bf16 -m kor_chat.train.vlm \
+accelerate launch --num_processes "$NPROC" $MULTI --mixed_precision bf16 -m kava.train.vlm \
   --stage align --exaone_id "$EXAONE_ID" \
   --vision_backbone "$VISION_BACKBONE" --siglip_model_id "$SIGLIP_MODEL_ID" \
   --siglip_num_patches "$SIGLIP_NUM_PATCHES" \

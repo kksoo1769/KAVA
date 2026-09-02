@@ -31,7 +31,7 @@ MULTI=""; [ "$NPROC" -gt 1 ] && MULTI="--multi_gpu"
 
 echo "[vlm_finetune.sh] stage=instruct(full fine-tuning) NPROC=$NPROC manifest=$DATA_MANIFEST"
 accelerate launch --num_processes "$NPROC" $MULTI --mixed_precision bf16 \
-  -m kor_chat.train.vlm \
+  -m kava.train.vlm \
   --stage instruct --lora_enable false --exaone_id "$EXAONE_ID" \
   --vision_backbone "$VISION_BACKBONE" --siglip_model_id "$SIGLIP_MODEL_ID" \
   --siglip_num_patches "$SIGLIP_NUM_PATCHES" \

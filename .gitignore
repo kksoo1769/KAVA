@@ -15,15 +15,15 @@ __pycache__
 
 
 # 체크포인트, 데이터, wandb, 임시 작업물 무시
-/runs/**/*.pt
-/runs/**/*.safetensors
-/runs/**/mlx/
-/runs/uploads
+# 학습 산출물(runs)은 저장소에서 완전히 분리한다. 학습은 이 서버, 서빙은 맥에서 돌기
+# 때문에 git 이 runs 를 반쯤 추적하면 학습할 때마다 meta.json 과 config.json 에 개인
+# 절대경로가 다시 써지고, 양쪽이 서로의 파일을 되돌리는 상태가 된다.
+# 체크포인트는 rsync 로 서버와 맥 사이에서 직접 옮긴다.
+/runs
 wandb
 /data
 aihubshell
 /scratchpad
-/scratchpad2
 /experiments
 /services/vision/vision-ocr
 /mlx_bench

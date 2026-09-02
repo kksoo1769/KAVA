@@ -31,7 +31,7 @@ MULTI=""; [ "$NPROC" -gt 1 ] && MULTI="--multi_gpu"
 
 echo "[vlm_finetune_lora.sh] stage=instruct(LoRA r64/a128) NPROC=$NPROC manifest=$DATA_MANIFEST"
 accelerate launch --num_processes "$NPROC" $MULTI --mixed_precision bf16 \
-  -m kor_chat.train.vlm \
+  -m kava.train.vlm \
   --stage instruct --lora_enable true --lora_r 64 --lora_alpha 128 \
   --exaone_id "$EXAONE_ID" \
   --vision_backbone "$VISION_BACKBONE" --siglip_model_id "$SIGLIP_MODEL_ID" \
